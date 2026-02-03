@@ -15,12 +15,13 @@
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
 
         #game-wrapper {
@@ -29,7 +30,7 @@
             padding: 25px;
             background: var(--panel);
             border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             position: relative;
         }
 
@@ -43,49 +44,63 @@
             width: 200px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
 
         .stat-box {
             background: #0f172a;
-            padding: 12px;
+            padding: 10px;
             border-radius: 12px;
             text-align: center;
             border: 1px solid #334155;
         }
 
-        .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 22px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;}
+        .stat-value { font-size: 20px; font-weight: 800; color: var(--accent); }
 
-        /* Preview Box */
         #next-piece-canvas {
             background: #0f172a;
-            border: 2px dashed #334155;
-            margin-top: 5px;
             border-radius: 8px;
+            margin-top: 5px;
         }
 
-        /* Управление */
+        /* Кнопки действий */
+        .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+        .btn {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+        }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-ghost { background: #334155; color: white; }
+
+        /* ИНСТРУКЦИЯ */
         .controls-hint {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 12px;
             margin-top: auto;
         }
-        .key {
-            background: #334155;
-            border-radius: 6px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .control-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 11px; color: #94a3b8; }
+        .key-cap {
+            background: #475569;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border-bottom: 3px solid #1e293b;
             font-weight: bold;
-            font-size: 14px;
-            border-bottom: 3px solid #000;
+            min-width: 20px;
+            text-align: center;
         }
-        .key.wide { grid-column: span 3; font-size: 11px; height: 25px; border: none; color: #94a3b8; }
 
-        /* Overlays */
         .overlay {
             position: absolute;
             inset: 0;
@@ -100,21 +115,6 @@
             text-align: center;
         }
 
-        .btn {
-            background: var(--accent);
-            color: #0f172a;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 10px;
-            transition: 0.2s;
-        }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #334155; }
-
         .hidden { display: none !important; }
     </style>
 </head>
@@ -126,7 +126,7 @@
     <div class="side-panel">
         <div class="stat-box">
             <div class="stat-label">СЛЕДУЮЩАЯ</div>
-            <canvas id="next-piece-canvas" width="100" height="100"></canvas>
+            <canvas id="next-piece-canvas" width="80" height="80"></canvas>
         </div>
 
         <div class="stat-box">
@@ -139,26 +139,39 @@
             <div id="score-val" class="stat-value">0</div>
         </div>
 
-        <button class="btn btn-ghost" onclick="endGame(false)">Выйти</button>
+        <div class="actions">
+            <button class="btn btn-ghost" onclick="resetGame()">Начать заново</button>
+            <button class="btn btn-danger" onclick="endGame(false, true)">Завершить игру</button>
+        </div>
 
         <div class="controls-hint">
-            <div class="key-label wide">ПОВОРОТ</div>
-            <div></div> <div class="key">▲</div> <div></div>
-            <div class="key-label wide">ДВИЖЕНИЕ</div>
-            <div class="key">◄</div> <div class="key">▼</div> <div class="key">►</div>
+            <div class="control-row">
+                <span class="key-cap">▲</span> <span>ПОВОРОТ</span>
+            </div>
+            <div class="control-row">
+                <span class="key-cap">◄</span><span class="key-cap">►</span> <span>ДВИЖЕНИЕ</span>
+            </div>
+            <div class="control-row">
+                <span class="key-cap">▼</span> <span>УСКОРИТЬ</span>
+            </div>
         </div>
     </div>
 
     <div id="menu-screen" class="overlay">
-        <h1>TETRIS EDU</h1>
-        <p>Выберите режим обучения:</p>
-        <button class="btn" onclick="initGame('timer')">СПРИНТ (5 МИН)</button>
-        <button class="btn btn-ghost" onclick="initGame('infinite')">БЕСКОНЕЧНЫЙ</button>
+        <h1>TETRIS QUIZ</h1>
+        <button class="btn" style="width: 200px" onclick="initGame('timer')">ИГРАТЬ (5 МИН)</button>
+        <button class="btn btn-ghost" style="width: 200px; margin-top: 10px;" onclick="initGame('infinite')">БЕСКОНЕЧНО</button>
     </div>
 
     <div id="quiz-screen" class="overlay hidden">
         <h2 id="q-text">Вопрос...</h2>
-        <div id="q-options" style="width: 100%"></div>
+        <div id="q-options" style="width: 100%; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+
+    <div id="result-screen" class="overlay hidden">
+        <h1 id="res-title">РЕЗУЛЬТАТ</h1>
+        <div id="res-stats" style="font-size: 18px; margin-bottom: 20px;"></div>
+        <button class="btn" onclick="resetGame()">ИГРАТЬ СНОВА</button>
     </div>
 </div>
 
@@ -167,8 +180,9 @@ const CONFIG = {
     cols: 10, rows: 20, size: 30,
     speed: 800,
     questions: [
-        { q: "Как правильно?", a: ["Apple", "Aple"], c: 0 },
-        { q: "2 + 2 * 2", a: ["8", "6"], c: 1 }
+        { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
+        { q: "Результат: 10 - 2 * 3", a: ["24", "4"], c: 1 },
+        { q: "Столица Японии?", a: ["Пекин", "Токио"], c: 1 }
     ]
 };
 
@@ -177,10 +191,7 @@ const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-piece-canvas');
 const nctx = nextCanvas.getContext('2d');
 
-let arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
-let score = 0, gameActive = false, isPaused = false, timeLeft = 300;
-let dropCounter = 0, lastTime = 0, timerInterval;
-
+let arena, score, gameActive, isPaused, timeLeft, timerInterval, dropCounter, lastTime;
 const player = { pos: {x: 0, y: 0}, matrix: null, next: null };
 const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 
@@ -194,17 +205,29 @@ function createPiece(type) {
     if (type === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
 }
 
+function resetGame() {
+    clearInterval(timerInterval);
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('menu-screen').classList.remove('hidden');
+    gameActive = false;
+    isPaused = false;
+}
+
 function initGame(mode) {
     document.getElementById('menu-screen').classList.add('hidden');
+    arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
     score = 0;
     timeLeft = mode === 'timer' ? 300 : 9999;
     gameActive = true;
+    dropCounter = 0;
+    lastTime = 0;
     player.next = createPiece('ILJOTSZ'[Math.random() * 7 | 0]);
     playerReset();
+    updateUI();
     
     if(mode === 'timer') {
         timerInterval = setInterval(() => {
-            if(!isPaused) {
+            if(!isPaused && gameActive) {
                 timeLeft--;
                 updateUI();
                 if(timeLeft <= 0) endGame(true);
@@ -225,12 +248,12 @@ function playerReset() {
 
 function drawNext() {
     nctx.fillStyle = '#0f172a';
-    nctx.fillRect(0, 0, 100, 100);
+    nctx.fillRect(0, 0, 80, 80);
     player.next.forEach((row, y) => {
         row.forEach((value, x) => {
             if (value !== 0) {
                 nctx.fillStyle = COLORS[value];
-                nctx.fillRect(x * 20 + 25, y * 20 + 25, 18, 18);
+                nctx.fillRect(x * 15 + 20, y * 15 + 20, 14, 14);
             }
         });
     });
@@ -244,6 +267,11 @@ function collide(arena, player) {
         }
     }
     return false;
+}
+
+function rotate(matrix) {
+    for(let y=0; y<matrix.length; ++y) for(let x=0; x<y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+    matrix.forEach(row => row.reverse());
 }
 
 function arenaSweep() {
@@ -293,15 +321,17 @@ function showQuiz(rows) {
 
 function updateUI() {
     document.getElementById('score-val').innerText = score;
-    const m = Math.floor(timeLeft/60), s = timeLeft%60;
+    const m = Math.floor(Math.max(0, timeLeft)/60), s = Math.max(0, timeLeft)%60;
     document.getElementById('timer-val').innerText = `${m}:${s<10?'0':''}${s}`;
 }
 
-function endGame(win) {
+function endGame(win, manual = false) {
     gameActive = false;
     clearInterval(timerInterval);
-    alert(win ? "Время вышло! Победа!" : "Игра окончена!");
-    location.reload();
+    const resScreen = document.getElementById('result-screen');
+    resScreen.classList.remove('hidden');
+    document.getElementById('res-title').innerText = manual ? "ИГРА ПРЕРВАНА" : (win ? "ВРЕМЯ ВЫШЛО!" : "КОНЕЦ ИГРЫ");
+    document.getElementById('res-stats').innerHTML = `Очки: ${score}<br>Линий: ${score/100}`;
 }
 
 function draw() {
@@ -313,12 +343,14 @@ function draw() {
             ctx.fillRect(x*CONFIG.size, y*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
         }
     }));
-    player.matrix.forEach((row, y) => row.forEach((val, x) => {
-        if(val !== 0) {
-            ctx.fillStyle = COLORS[val];
-            ctx.fillRect((x+player.pos.x)*CONFIG.size, (y+player.pos.y)*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
-        }
-    }));
+    if(player.matrix) {
+        player.matrix.forEach((row, y) => row.forEach((val, x) => {
+            if(val !== 0) {
+                ctx.fillStyle = COLORS[val];
+                ctx.fillRect((x+player.pos.x)*CONFIG.size, (y+player.pos.y)*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
+            }
+        }));
+    }
 }
 
 function update(time = 0) {
@@ -347,11 +379,19 @@ document.addEventListener('keydown', e => {
     if(e.keyCode === 37) { player.pos.x--; if(collide(arena, player)) player.pos.x++; }
     if(e.keyCode === 39) { player.pos.x++; if(collide(arena, player)) player.pos.x--; }
     if(e.keyCode === 40) { player.pos.y++; if(collide(arena, player)) player.pos.y--; }
-    if(e.keyCode === 38) { // Rotate
-        const m = player.matrix;
-        for(let y=0; y<m.length; ++y) for(let x=0; x<y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
-        m.forEach(row => row.reverse());
-        if(collide(arena, player)) m.forEach(row => row.reverse()); // simple undo
+    if(e.keyCode === 38) { 
+        const pos = player.pos.x;
+        rotate(player.matrix);
+        let offset = 1;
+        while(collide(arena, player)) {
+            player.pos.x += offset;
+            offset = -(offset + (offset > 0 ? 1 : -1));
+            if(offset > player.matrix[0].length) {
+                rotate(player.matrix); rotate(player.matrix); rotate(player.matrix); // back
+                player.pos.x = pos;
+                return;
+            }
+        }
     }
 });
 </script>
