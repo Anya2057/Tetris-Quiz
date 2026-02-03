@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --grid-color: #16213e;
+            --tetromino-color: #0f3460;
+            --accent-color: #e94560;
+            --success-color: #4caf50;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            display: flex;
+            gap: 20px;
+        }
+
+        canvas {
+            border: 4px solid var(--tetromino-color);
+            background-color: var(--grid-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px; /* Ширина стакана */
+            height: 600px;
+            display: none; /* Скрыто по умолчанию */
+            background: rgba(26, 26, 46, 0.95);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-card {
+            border: 2px solid var(--accent-color);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .btn:hover { opacity: 0.8; }
+        
+        .line-error { animation: shake 0.5s; background-color: rgba(233, 69, 96, 0.5) !important; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="stats-panel" class="stats">
+        <div>Очки: <span id="score">0</span></div>
+        <div>Линии: <span id="lines">0</span></div>
+        <div>Ошибки: <span id="errors">0</span></div>
+        <div id="timer-display">Время: --:--</div>
+    </div>
+    
+    <canvas id="tetris" width="300" height="600"></canvas>
+
+    <div id="ui-layer">
+        <div id="quiz-container" class="quiz-card">
+            <h3 id="question-text">Вопрос?</h3>
+            <div id="options-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * НАСТРОЙКИ (Будут приходить из редактора)
+ */
+const CONFIG = {
+    gridSize: 30,
+    cols: 10,
+    rows: 20,
+    initialSpeed: 1000,
+    gameMode: 'infinite', // 'infinite' или 'timer'
+    timeLimit: 300, // в секундах
+    maxErrors: 5,
+    questions: [
+        { q: "2 + 2 * 2 = ?", a: ["6", "8", "4"], correct: 0 },
+        { q: "Столица Франции?", a: ["Лондон", "Париж", "Берлин"], correct: 1 },
+        { q: "Земля плоская?", a: ["Да", "Нет"], correct: 1 }
+    ]
+};
+
+/**
+ * ИНИЦИАЛИЗАЦИЯ И ЛОГИКА ТЕТРИСА
+ */
+const canvas = document.getElementById('tetris');
+const context = canvas.getContext('2d');
+const uiLayer = document.getElementById('ui-layer');
+
+let score = 0, linesCleared = 0, errorsCount = 0;
+let gameOver = false;
+let isPaused = false;
+let pendingLines = []; // Линии, которые ждут подтверждения
+
+// Цвета фигур
+const COLORS = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+
+function createPiece(type) {
+    if (type === 'T') return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
+    if (type === 'O') return [[2, 2], [2, 2]];
+    if (type === 'L') return [[0, 0, 3], [3, 3, 3], [0, 0, 0]];
+    if (type === 'J') return [[4, 0, 0], [4, 4, 4], [0, 0, 0]];
+    if (type === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
+    if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+    if (type === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+}
+
+const arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
+
+const player = {
+    pos: {x: 0, y: 0},
+    matrix: null,
+};
+
+// Отрисовка
+function draw() {
+    context.fillStyle = '#16213e';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    drawMatrix(arena, {x: 0, y: 0});
+    drawMatrix(player.matrix, player.pos);
+}
+
+function drawMatrix(matrix, offset) {
+    matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if (value !== 0) {
+                context.fillStyle = value === -1 ? '#ff4d4d' : COLORS[value]; // -1 для ошибок
+                context.fillRect((x + offset.x) * CONFIG.gridSize, (y + offset.y) * CONFIG.gridSize, CONFIG.gridSize - 1, CONFIG.gridSize - 1);
+            }
+        });
+    });
+}
+
+// Столкновения
+function collide(arena, player) {
+    const [m, o] = [player.matrix, player.pos];
+    for (let y = 0; y < m.length; ++y) {
+        for (let x = 0; x < m[y].length; ++x) {
+            if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+        }
+    }
+    return false;
+}
+
+// Слияние
+function merge(arena, player) {
+    player.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+        });
+    });
+}
+
+// Проверка заполненных линий
+function arenaSweep() {
+    let rowCount = 0;
+    let fullRows = [];
+    outer: for (let y = arena.length - 1; y > 0; --y) {
+        for (let x = 0; x < arena[y].length; ++x) {
+            if (arena[y][x] === 0) continue outer;
+        }
+        fullRows.push(y);
+    }
+    
+    if (fullRows.length > 0) {
+        pendingLines = fullRows;
+        triggerQuiz();
+    }
+}
+
+// Логика викторины
+function triggerQuiz() {
+    isPaused = true;
+    uiLayer.style.display = 'flex';
+    const qData = CONFIG.questions[Math.floor(Math.random() * CONFIG.questions.length)];
+    
+    document.getElementById('question-text').innerText = qData.q;
+    const optContainer = document.getElementById('options-container');
+    optContainer.innerHTML = '';
+    
+    qData.a.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(index === qData.correct);
+        optContainer.appendChild(btn);
+    });
+}
+
+function checkAnswer(isCorrect) {
+    if (isCorrect) {
+        // Очистка линий
+        pendingLines.sort((a,b) => a - b).forEach(y => {
+            const row = arena.splice(y, 1)[0].fill(0);
+            arena.unshift(row);
+        });
+        score += pendingLines.length * 100;
+        linesCleared += pendingLines.length;
+    } else {
+        // Помечаем линии "ошибочными" (красными)
+        pendingLines.forEach(y => {
+            arena[y] = arena[y].map(cell => -1); 
+        });
+        errorsCount++;
+    }
+    
+    // Обновляем UI
+    document.getElementById('score').innerText = score;
+    document.getElementById('lines').innerText = linesCleared;
+    document.getElementById('errors').innerText = errorsCount;
+    
+    pendingLines = [];
+    uiLayer.style.display = 'none';
+    isPaused = false;
+    update();
+}
+
+function playerDrop() {
+    player.pos.y++;
+    if (collide(arena, player)) {
+        player.pos.y--;
+        merge(arena, player);
+        playerReset();
+        arenaSweep();
+    }
+    dropCounter = 0;
+}
+
+function playerMove(dir) {
+    player.pos.x += dir;
+    if (collide(arena, player)) player.pos.x -= dir;
+}
+
+function playerRotate() {
+    const pos = player.pos.x;
+    let offset = 1;
+    rotate(player.matrix);
+    while (collide(arena, player)) {
+        player.pos.x += offset;
+        offset = -(offset + (offset > 0 ? 1 : -1));
+        if (offset > player.matrix[0].length) {
+            rotate(player.matrix, -1);
+            player.pos.x = pos;
+            return;
+        }
+    }
+}
+
+function rotate(matrix, dir = 1) {
+    for (let y = 0; y < matrix.length; ++y) {
+        for (let x = 0; x < y; ++x) {
+            [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+        }
+    }
+    if (dir > 0) matrix.forEach(row => row.reverse());
+    else matrix.reverse();
+}
+
+function playerReset() {
+    const pieces = 'ILJOTSZ';
+    player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+    player.pos.y = 0;
+    player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+    
+    if (collide(arena, player)) {
+        gameOver = true;
+        alert("GAME OVER! Очки: " + score);
+        arena.forEach(row => row.fill(0));
+        score = 0;
+        gameOver = false;
+    }
+}
+
+let dropCounter = 0;
+let lastTime = 0;
+
+function update(time = 0) {
+    if (isPaused || gameOver) return;
+
+    const deltaTime = time - lastTime;
+    lastTime = time;
+    dropCounter += deltaTime;
+    
+    if (dropCounter > CONFIG.initialSpeed) {
+        playerDrop();
+    }
+    
+    draw();
+    requestAnimationFrame(update);
+}
+
+// Управление
+document.addEventListener('keydown', event => {
+    if (isPaused) return;
+    if (event.keyCode === 37) playerMove(-1);
+    else if (event.keyCode === 39) playerMove(1);
+    else if (event.keyCode === 40) playerDrop();
+    else if (event.keyCode === 38) playerRotate();
+});
+
+playerReset();
+update();
+</script>
+</body>
+</html>
