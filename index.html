@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --panel-color: #1e293b;
+            --bg: #0f172a;
+            --panel: #1e293b;
             --accent: #38bdf8;
             --danger: #f43f5e;
             --success: #10b981;
@@ -13,96 +13,90 @@
         }
 
         body {
-            background: var(--bg-color);
+            background: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
         }
 
-        /* Игровой контейнер */
         #game-wrapper {
             display: flex;
-            gap: 30px;
-            padding: 20px;
-            background: var(--panel-color);
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            gap: 20px;
+            padding: 25px;
+            background: var(--panel);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
             position: relative;
         }
 
-        /* Канвас */
         canvas {
             background: #020617;
-            border-radius: 8px;
-            border: 3px solid #334155;
+            border-radius: 12px;
+            border: 4px solid #334155;
         }
 
-        /* Панель информации */
         .side-panel {
-            width: 220px;
+            width: 200px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            gap: 15px;
         }
 
         .stat-box {
             background: #0f172a;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--accent);
+            text-align: center;
+            border: 1px solid #334155;
         }
 
-        .stat-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; }
-        .stat-value { font-size: 24px; font-weight: bold; color: var(--text); }
+        .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 22px; font-weight: 800; color: var(--accent); }
 
-        /* ИНСТРУКЦИЯ (Контроллер) */
-        .controls-guide {
-            margin-top: 20px;
+        /* Preview Box */
+        #next-piece-canvas {
+            background: #0f172a;
+            border: 2px dashed #334155;
+            margin-top: 5px;
+            border-radius: 8px;
+        }
+
+        /* Управление */
+        .controls-hint {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            justify-items: center;
+            gap: 4px;
+            margin-top: auto;
         }
-
         .key {
             background: #334155;
             border-radius: 6px;
-            padding: 8px;
-            width: 35px;
             height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-bottom: 3px solid #000;
             font-weight: bold;
+            font-size: 14px;
+            border-bottom: 3px solid #000;
         }
+        .key.wide { grid-column: span 3; font-size: 11px; height: 25px; border: none; color: #94a3b8; }
 
-        .key-label {
-            grid-column: span 3;
-            font-size: 11px;
-            color: #94a3b8;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        /* Экраны (Menu, Quiz, Results) */
+        /* Overlays */
         .overlay {
             position: absolute;
             inset: 0;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             z-index: 100;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 20px;
-            padding: 40px;
+            border-radius: 24px;
+            padding: 30px;
             text-align: center;
         }
 
@@ -110,156 +104,136 @@
             background: var(--accent);
             color: #0f172a;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
-            margin: 10px;
             width: 100%;
+            margin-bottom: 10px;
             transition: 0.2s;
         }
-
-        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
-        .btn-secondary { background: #64748b; color: white; }
-
-        /* Quiz Styles */
-        #quiz-layer { display: none; }
-        .options-grid { display: grid; grid-template-columns: 1fr; width: 100%; gap: 10px; margin-top: 20px; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #334155; }
 
         .hidden { display: none !important; }
-        
-        /* Анимация тряски */
-        .shake { animation: shake 0.4s; }
-        @keyframes shake {
-            0%, 100% { transform: translate(0); }
-            25% { transform: translate(-8px); }
-            75% { transform: translate(8px); }
-        }
     </style>
 </head>
 <body>
 
 <div id="game-wrapper">
-    <canvas id="tetris"></canvas>
+    <canvas id="tetris" width="300" height="600"></canvas>
 
     <div class="side-panel">
-        <div>
-            <div class="stat-box">
-                <div class="stat-label">Очки</div>
-                <div id="score" class="stat-value">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Время</div>
-                <div id="timer" class="stat-value">05:00</div>
-            </div>
-            <div class="stat-box" style="border-left-color: var(--danger);">
-                <div class="stat-label">Ошибки</div>
-                <div id="errors" class="stat-value">0</div>
-            </div>
+        <div class="stat-box">
+            <div class="stat-label">СЛЕДУЮЩАЯ</div>
+            <canvas id="next-piece-canvas" width="100" height="100"></canvas>
         </div>
 
-        <div class="controls-container">
-            <div class="key-label">УПРАВЛЕНИЕ</div>
-            <div class="controls-guide">
-                <div></div> <div class="key">▲</div> <div></div>
-                <div class="key">◄</div> <div class="key">▼</div> <div class="key">►</div>
-            </div>
-            <div style="font-size: 10px; text-align: center; margin-top: 10px; color: #64748b;">
-                Стрелки: Движение и Поворот
-            </div>
+        <div class="stat-box">
+            <div class="stat-label">ВРЕМЯ</div>
+            <div id="timer-val" class="stat-value">00:00</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-label">ОЧКИ</div>
+            <div id="score-val" class="stat-value">0</div>
+        </div>
+
+        <button class="btn btn-ghost" onclick="endGame(false)">Выйти</button>
+
+        <div class="controls-hint">
+            <div class="key-label wide">ПОВОРОТ</div>
+            <div></div> <div class="key">▲</div> <div></div>
+            <div class="key-label wide">ДВИЖЕНИЕ</div>
+            <div class="key">◄</div> <div class="key">▼</div> <div class="key">►</div>
         </div>
     </div>
 
     <div id="menu-screen" class="overlay">
-        <h1>TETRIS QUIZ</h1>
-        <p>Выбери режим игры:</p>
-        <button class="btn" onclick="startGame('timer')">СПРИНТ (5 МИНУТ)</button>
-        <button class="btn btn-secondary" onclick="startGame('infinite')">МАРАФОН (БЕСКОНЕЧНО)</button>
+        <h1>TETRIS EDU</h1>
+        <p>Выберите режим обучения:</p>
+        <button class="btn" onclick="initGame('timer')">СПРИНТ (5 МИН)</button>
+        <button class="btn btn-ghost" onclick="initGame('infinite')">БЕСКОНЕЧНЫЙ</button>
     </div>
 
-    <div id="quiz-layer" class="overlay">
+    <div id="quiz-screen" class="overlay hidden">
         <h2 id="q-text">Вопрос...</h2>
-        <div id="q-options" class="options-grid"></div>
-    </div>
-
-    <div id="result-screen" class="overlay hidden">
-        <h1 id="res-title">КОНЕЦ ИГРЫ</h1>
-        <div id="res-stats" style="margin-bottom: 20px;"></div>
-        <button class="btn" onclick="location.reload()">ИГРАТЬ СНОВА</button>
+        <div id="q-options" style="width: 100%"></div>
     </div>
 </div>
 
 <script>
-/**
- * КОНФИГУРАЦИЯ (Для будущего редактора)
- */
 const CONFIG = {
-    grid: { cols: 12, rows: 20, size: 30 }, // Размер поля
-    gameMode: 'infinite',
-    timeLimit: 300,
+    cols: 10, rows: 20, size: 30,
     speed: 800,
     questions: [
-        { type: 'mc', q: 'Выберите верное написание:', a: ['Success', 'Sucess', 'Suces'], c: 0 },
-        { type: 'tf', q: 'Тетрис был создан в СССР?', a: ['Правда', 'Ложь'], c: 0 },
-        { type: 'mc', q: '2 + 2 * 2 = ?', a: ['4', '6', '8'], c: 1 }
+        { q: "Как правильно?", a: ["Apple", "Aple"], c: 0 },
+        { q: "2 + 2 * 2", a: ["8", "6"], c: 1 }
     ]
 };
 
-// Инициализация холста
 const canvas = document.getElementById('tetris');
 const ctx = canvas.getContext('2d');
-canvas.width = CONFIG.grid.cols * CONFIG.grid.size;
-canvas.height = CONFIG.grid.rows * CONFIG.grid.size;
+const nextCanvas = document.getElementById('next-piece-canvas');
+const nctx = nextCanvas.getContext('2d');
 
-let arena = createArena(CONFIG.grid.cols, CONFIG.grid.rows);
-let score = 0, lines = 0, errors = 0, timeLeft = CONFIG.timeLimit;
-let gameActive = false, isPaused = false;
-let timerId = null, dropCounter = 0, lastTime = 0;
-let pendingLines = [];
+let arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
+let score = 0, gameActive = false, isPaused = false, timeLeft = 300;
+let dropCounter = 0, lastTime = 0, timerInterval;
 
+const player = { pos: {x: 0, y: 0}, matrix: null, next: null };
 const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
-
-function createArena(w, h) { return Array.from({length: h}, () => Array(w).fill(0)); }
-
-const player = { pos: {x: 0, y: 0}, matrix: null };
-
-// ЛОГИКА ИГРЫ
-function startGame(mode) {
-    CONFIG.gameMode = mode;
-    document.getElementById('menu-screen').classList.add('hidden');
-    gameActive = true;
-    playerReset();
-    if(mode === 'timer') startTimer();
-    update();
-}
-
-function startTimer() {
-    timerId = setInterval(() => {
-        if(!isPaused && gameActive) {
-            timeLeft--;
-            const m = Math.floor(timeLeft/60), s = timeLeft%60;
-            document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
-            if(timeLeft <= 0) endGame(true);
-        }
-    }, 1000);
-}
-
-function playerReset() {
-    const pieces = 'ILJOTSZ';
-    player.matrix = createPiece(pieces[Math.random() * pieces.length | 0]);
-    player.pos.y = 0;
-    player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-    if (collide(arena, player)) endGame(false);
-}
 
 function createPiece(type) {
     if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
-    if (type === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
-    if (type === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
-    if (type === 'O') return [[4,4],[4,4]];
-    if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
+    if (type === 'T') return [[0,2,0],[2,2,2],[0,0,0]];
+    if (type === 'O') return [[3,3],[3,3]];
+    if (type === 'L') return [[0,4,0],[0,4,0],[0,4,4]];
+    if (type === 'J') return [[0,5,0],[0,5,0],[5,5,0]];
     if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
-    if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
+    if (type === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
+}
+
+function initGame(mode) {
+    document.getElementById('menu-screen').classList.add('hidden');
+    score = 0;
+    timeLeft = mode === 'timer' ? 300 : 9999;
+    gameActive = true;
+    player.next = createPiece('ILJOTSZ'[Math.random() * 7 | 0]);
+    playerReset();
+    
+    if(mode === 'timer') {
+        timerInterval = setInterval(() => {
+            if(!isPaused) {
+                timeLeft--;
+                updateUI();
+                if(timeLeft <= 0) endGame(true);
+            }
+        }, 1000);
+    }
+    update();
+}
+
+function playerReset() {
+    player.matrix = player.next;
+    player.next = createPiece('ILJOTSZ'[Math.random() * 7 | 0]);
+    player.pos.y = 0;
+    player.pos.x = (CONFIG.cols / 2 | 0) - (player.matrix[0].length / 2 | 0);
+    drawNext();
+    if(collide(arena, player)) endGame(false);
+}
+
+function drawNext() {
+    nctx.fillStyle = '#0f172a';
+    nctx.fillRect(0, 0, 100, 100);
+    player.next.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if (value !== 0) {
+                nctx.fillStyle = COLORS[value];
+                nctx.fillRect(x * 20 + 25, y * 20 + 25, 18, 18);
+            }
+        });
+    });
 }
 
 function collide(arena, player) {
@@ -273,106 +247,92 @@ function collide(arena, player) {
 }
 
 function arenaSweep() {
-    let fullRows = [];
+    let rowsToClear = [];
     outer: for (let y = arena.length - 1; y > 0; --y) {
         for (let x = 0; x < arena[y].length; ++x) {
             if (arena[y][x] === 0) continue outer;
         }
-        fullRows.push(y);
+        rowsToClear.push(y);
     }
-    if (fullRows.length > 0) {
-        pendingLines = fullRows;
-        showQuiz();
+    if (rowsToClear.length > 0) {
+        isPaused = true;
+        showQuiz(rowsToClear);
     }
 }
 
-function showQuiz() {
-    isPaused = true;
+function showQuiz(rows) {
     const q = CONFIG.questions[Math.random() * CONFIG.questions.length | 0];
-    document.getElementById('quiz-layer').style.display = 'flex';
+    const screen = document.getElementById('quiz-screen');
+    screen.classList.remove('hidden');
     document.getElementById('q-text').innerText = q.q;
-    const container = document.getElementById('q-options');
-    container.innerHTML = '';
+    const optCont = document.getElementById('q-options');
+    optCont.innerHTML = '';
+    
     q.a.forEach((opt, i) => {
         const b = document.createElement('button');
         b.className = 'btn';
         b.innerText = opt;
-        b.onclick = () => handleAnswer(i === q.c);
-        container.appendChild(b);
+        b.onclick = () => {
+            if(i === q.c) {
+                rows.sort((a,b) => a-b).forEach(y => {
+                    arena.splice(y, 1);
+                    arena.unshift(new Array(CONFIG.cols).fill(0));
+                });
+                score += rows.length * 100;
+            } else {
+                rows.forEach(y => arena[y] = arena[y].map(() => -1));
+            }
+            isPaused = false;
+            screen.classList.add('hidden');
+            updateUI();
+            update();
+        };
+        optCont.appendChild(b);
     });
 }
 
-function handleAnswer(correct) {
-    if (correct) {
-        pendingLines.sort((a,b)=>a-b).forEach(y => {
-            arena.splice(y, 1);
-            arena.unshift(new Array(CONFIG.grid.cols).fill(0));
-        });
-        score += pendingLines.length * 100;
-        lines += pendingLines.length;
-    } else {
-        pendingLines.forEach(y => arena[y] = arena[y].map(() => -1));
-        errors++;
-        document.getElementById('game-wrapper').classList.add('shake');
-        setTimeout(() => document.getElementById('game-wrapper').classList.remove('shake'), 400);
-    }
-    
-    document.getElementById('score').innerText = score;
-    document.getElementById('errors').innerText = errors;
-    document.getElementById('quiz-layer').style.display = 'none';
-    pendingLines = [];
-    isPaused = false;
-    update();
+function updateUI() {
+    document.getElementById('score-val').innerText = score;
+    const m = Math.floor(timeLeft/60), s = timeLeft%60;
+    document.getElementById('timer-val').innerText = `${m}:${s<10?'0':''}${s}`;
 }
 
 function endGame(win) {
     gameActive = false;
-    clearInterval(timerId);
-    document.getElementById('result-screen').classList.remove('hidden');
-    document.getElementById('res-title').innerText = win ? "ВРЕМЯ ВЫШЛО! 🎉" : "GAME OVER 💀";
-    document.getElementById('res-stats').innerHTML = `
-        <p>Очки: ${score}</p>
-        <p>Линий: ${lines}</p>
-        <p>Ошибки: ${errors}</p>
-    `;
+    clearInterval(timerInterval);
+    alert(win ? "Время вышло! Победа!" : "Игра окончена!");
+    location.reload();
 }
 
 function draw() {
     ctx.fillStyle = '#020617';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Рисуем сетку (опционально для стиля)
-    ctx.strokeStyle = '#1e293b';
-    for(let x=0; x<canvas.width; x+=CONFIG.grid.size) ctx.strokeRect(x, 0, 0.1, canvas.height);
-    for(let y=0; y<canvas.height; y+=CONFIG.grid.size) ctx.strokeRect(0, y, canvas.width, 0.1);
-
-    drawMatrix(arena, {x:0, y:0});
-    drawMatrix(player.matrix, player.pos);
-}
-
-function drawMatrix(m, o) {
-    m.forEach((row, y) => {
-        row.forEach((val, x) => {
-            if (val !== 0) {
-                ctx.fillStyle = val === -1 ? '#f43f5e' : COLORS[val];
-                ctx.fillRect((x+o.x)*CONFIG.grid.size + 1, (y+o.y)*CONFIG.grid.size + 1, CONFIG.grid.size-2, CONFIG.grid.size-2);
-            }
-        });
-    });
+    arena.forEach((row, y) => row.forEach((val, x) => {
+        if(val !== 0) {
+            ctx.fillStyle = val === -1 ? '#f43f5e' : COLORS[val];
+            ctx.fillRect(x*CONFIG.size, y*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
+        }
+    }));
+    player.matrix.forEach((row, y) => row.forEach((val, x) => {
+        if(val !== 0) {
+            ctx.fillStyle = COLORS[val];
+            ctx.fillRect((x+player.pos.x)*CONFIG.size, (y+player.pos.y)*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
+        }
+    }));
 }
 
 function update(time = 0) {
-    if (!gameActive || isPaused) return;
+    if(!gameActive || isPaused) return;
     const dt = time - lastTime;
     lastTime = time;
     dropCounter += dt;
-    if (dropCounter > CONFIG.speed) {
+    if(dropCounter > CONFIG.speed) {
         player.pos.y++;
-        if (collide(arena, player)) {
+        if(collide(arena, player)) {
             player.pos.y--;
-            player.matrix.forEach((row, y) => {
-                row.forEach((v, x) => { if(v!==0) arena[y+player.pos.y][x+player.pos.x] = v; });
-            });
+            player.matrix.forEach((row, y) => row.forEach((v, x) => {
+                if(v !== 0) arena[y+player.pos.y][x+player.pos.x] = v;
+            }));
             playerReset();
             arenaSweep();
         }
@@ -382,25 +342,16 @@ function update(time = 0) {
     requestAnimationFrame(update);
 }
 
-// Управление
 document.addEventListener('keydown', e => {
     if(!gameActive || isPaused) return;
     if(e.keyCode === 37) { player.pos.x--; if(collide(arena, player)) player.pos.x++; }
     if(e.keyCode === 39) { player.pos.x++; if(collide(arena, player)) player.pos.x--; }
     if(e.keyCode === 40) { player.pos.y++; if(collide(arena, player)) player.pos.y--; }
-    if(e.keyCode === 38) { 
-        const oldX = player.pos.x;
-        let offset = 1;
+    if(e.keyCode === 38) { // Rotate
         const m = player.matrix;
-        for (let y = 0; y < m.length; ++y) {
-            for (let x = 0; x < y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
-        }
+        for(let y=0; y<m.length; ++y) for(let x=0; x<y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
         m.forEach(row => row.reverse());
-        while(collide(arena, player)) {
-            player.pos.x += offset;
-            offset = -(offset + (offset > 0 ? 1 : -1));
-            if(offset > m[0].length) { /* вернуть как было */ }
-        }
+        if(collide(arena, player)) m.forEach(row => row.reverse()); // simple undo
     }
 });
 </script>
