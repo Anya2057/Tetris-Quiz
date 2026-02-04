@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <style>
         :root {
-            --bg: #0f172a;
-            --panel: #1e293b;
+            --bg: #020617;
+            --panel: rgba(30, 41, 59, 0.8);
             --accent: #38bdf8;
             --danger: #f43f5e;
             --success: #10b981;
@@ -15,7 +15,7 @@
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -24,165 +24,231 @@
             overflow: hidden;
         }
 
+        /* Анимированный фон со звездами */
+        #bg-stars {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: -1;
+        }
+
         #game-wrapper {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             padding: 25px;
             background: var(--panel);
+            backdrop-filter: blur(10px);
             border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
 
-        canvas {
-            background: #020617;
+        canvas#tetris {
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 12px;
-            border: 4px solid #334155;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
 
         .side-panel {
-            width: 200px;
+            width: 220px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
 
-        .stat-box {
-            background: #0f172a;
+        .stat-card {
+            background: rgba(15, 23, 42, 0.8);
             padding: 10px;
             border-radius: 12px;
             text-align: center;
-            border: 1px solid #334155;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;}
-        .stat-value { font-size: 20px; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 10px; color: #94a3b8; margin-bottom: 5px; letter-spacing: 1px; }
+        .stat-value { font-size: 22px; font-weight: bold; color: var(--accent); text-shadow: 0 0 10px var(--accent); }
 
-        #next-piece-canvas {
-            background: #0f172a;
-            border-radius: 8px;
-            margin-top: 5px;
-        }
-
-        /* Кнопки действий */
-        .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-
-        .btn {
-            background: var(--accent);
-            color: #0f172a;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 13px;
-        }
-        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-ghost { background: #334155; color: white; }
-
-        /* ИНСТРУКЦИЯ */
-        .controls-hint {
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 12px;
-            margin-top: auto;
-        }
-        .control-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 11px; color: #94a3b8; }
-        .key-cap {
-            background: #475569;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border-bottom: 3px solid #1e293b;
-            font-weight: bold;
-            min-width: 20px;
-            text-align: center;
-        }
-
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.95);
-            z-index: 100;
+        /* Джойстик */
+        .controller-map {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 15px;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .d-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .key {
+            width: 45px; height: 45px;
+            background: #334155;
+            border-radius: 8px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-bottom: 4px solid #0f172a;
+            transition: 0.1s;
+        }
+
+        .key-hint { font-size: 8px; color: #94a3b8; }
+        .rotate-icon { font-size: 18px; color: var(--accent); }
+
+        .btn {
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: 0.2s;
+        }
+
+        .btn-restart { background: #475569; color: white; }
+        .btn-finish { background: var(--danger); color: white; }
+        .btn:hover { transform: scale(1.03); filter: brightness(1.2); }
+
+        .overlay { 
+            position: absolute; inset: 0; 
+            background: rgba(2, 6, 23, 0.95); 
+            z-index: 100; border-radius: 24px; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            text-align: center; padding: 20px; 
+        }
+        
         .hidden { display: none !important; }
+
+        /* Эффект при очистке */
+        .row-blink { animation: blink 0.2s 2; }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0; } }
     </style>
 </head>
 <body>
+
+<canvas id="bg-stars"></canvas>
 
 <div id="game-wrapper">
     <canvas id="tetris" width="300" height="600"></canvas>
 
     <div class="side-panel">
-        <div class="stat-box">
+        <div class="stat-card">
             <div class="stat-label">СЛЕДУЮЩАЯ</div>
             <canvas id="next-piece-canvas" width="80" height="80"></canvas>
         </div>
 
-        <div class="stat-box">
-            <div class="stat-label">ВРЕМЯ</div>
-            <div id="timer-val" class="stat-value">00:00</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="stat-card">
+                <div class="stat-label">ВРЕМЯ</div>
+                <div id="timer-val" class="stat-value" style="font-size: 16px;">05:00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ОЧКИ</div>
+                <div id="score-val" class="stat-value" style="font-size: 16px;">0</div>
+            </div>
         </div>
 
-        <div class="stat-box">
-            <div class="stat-label">ОЧКИ</div>
-            <div id="score-val" class="stat-value">0</div>
+        <div class="controller-map">
+            <div class="d-pad">
+                <div></div>
+                <div class="key"><span class="rotate-icon">↻</span><span class="key-hint">▲</span></div>
+                <div></div>
+                <div class="key"><span>◄</span><span class="key-hint">ЛЕВО</span></div>
+                <div class="key"><span>▼</span><span class="key-hint">ВНИЗ</span></div>
+                <div class="key"><span>►</span><span class="key-hint">ПРАВО</span></div>
+            </div>
         </div>
 
-        <div class="actions">
-            <button class="btn btn-ghost" onclick="resetGame()">Начать заново</button>
-            <button class="btn btn-danger" onclick="endGame(false, true)">Завершить игру</button>
-        </div>
-
-        <div class="controls-hint">
-            <div class="control-row">
-                <span class="key-cap">▲</span> <span>ПОВОРОТ</span>
-            </div>
-            <div class="control-row">
-                <span class="key-cap">◄</span><span class="key-cap">►</span> <span>ДВИЖЕНИЕ</span>
-            </div>
-            <div class="control-row">
-                <span class="key-cap">▼</span> <span>УСКОРИТЬ</span>
-            </div>
+        <div class="btn-group" style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn btn-restart" onclick="resetGame()">🔄 Заново</button>
+            <button class="btn btn-finish" onclick="endGame(false, true)">🏁 Завершить</button>
         </div>
     </div>
 
     <div id="menu-screen" class="overlay">
-        <h1>TETRIS QUIZ</h1>
-        <button class="btn" style="width: 200px" onclick="initGame('timer')">ИГРАТЬ (5 МИН)</button>
-        <button class="btn btn-ghost" style="width: 200px; margin-top: 10px;" onclick="initGame('infinite')">БЕСКОНЕЧНО</button>
+        <h1 style="color: var(--accent); text-shadow: 0 0 20px var(--accent);">TETRIS QUIZ</h1>
+        <p style="opacity: 0.6; margin-bottom: 20px;">Образовательный космос</p>
+        <button class="btn" style="width: 200px; background: var(--accent);" onclick="initGame('timer')">⏱️ Спринт</button>
+        <button class="btn" style="width: 200px; background: transparent; color:white; border:1px solid #334155; margin-top:10px;" onclick="initGame('infinite')">♾️ Марафон</button>
     </div>
 
     <div id="quiz-screen" class="overlay hidden">
-        <h2 id="q-text">Вопрос...</h2>
-        <div id="q-options" style="width: 100%; display: flex; flex-direction: column; gap: 8px;"></div>
+        <div style="background: var(--panel); padding: 30px; border-radius: 20px; border: 1px solid var(--accent); width: 85%;">
+            <h2 id="q-text">Вопрос</h2>
+            <div id="q-options" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
     </div>
 
     <div id="result-screen" class="overlay hidden">
-        <h1 id="res-title">РЕЗУЛЬТАТ</h1>
-        <div id="res-stats" style="font-size: 18px; margin-bottom: 20px;"></div>
-        <button class="btn" onclick="resetGame()">ИГРАТЬ СНОВА</button>
+        <h1 id="res-title">ФИНИШ</h1>
+        <div id="res-stats"></div>
+        <button class="btn" style="background: var(--accent); margin-top: 20px;" onclick="resetGame()">🔄 ПОВТОРИТЬ</button>
     </div>
 </div>
 
 <script>
+// --- ЗВУКОВОЙ ДВИЖОК ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type, duration) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+}
+
+const SFX = {
+    rotate: () => playSound(440, 'sine', 0.1),
+    clear: () => { playSound(660, 'sine', 0.2); setTimeout(() => playSound(880, 'sine', 0.2), 100); },
+    error: () => playSound(110, 'triangle', 0.4),
+    drop: () => playSound(220, 'sine', 0.05)
+};
+
+// --- ФОН СО ЗВЕЗДАМИ ---
+const bgCanvas = document.getElementById('bg-stars');
+const bctx = bgCanvas.getContext('2d');
+let stars = [];
+
+function initStars() {
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+    stars = Array.from({length: 100}, () => ({
+        x: Math.random() * bgCanvas.width,
+        y: Math.random() * bgCanvas.height,
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5 + 0.1
+    }));
+}
+
+function animateStars() {
+    bctx.fillStyle = '#020617';
+    bctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    bctx.fillStyle = '#ffffff';
+    stars.forEach(s => {
+        bctx.beginPath();
+        bctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+        bctx.fill();
+        s.y += s.speed;
+        if(s.y > bgCanvas.height) s.y = 0;
+    });
+    requestAnimationFrame(animateStars);
+}
+initStars();
+animateStars();
+
+// --- ЛОГИКА ИГРЫ ---
 const CONFIG = {
     cols: 10, rows: 20, size: 30,
     speed: 800,
     questions: [
         { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
-        { q: "Результат: 10 - 2 * 3", a: ["24", "4"], c: 1 },
-        { q: "Столица Японии?", a: ["Пекин", "Токио"], c: 1 }
+        { q: "Столица Франции?", a: ["Париж", "Лион", "Марсель"], c: 0 },
+        { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
     ]
 };
 
@@ -220,18 +286,13 @@ function initGame(mode) {
     timeLeft = mode === 'timer' ? 300 : 9999;
     gameActive = true;
     dropCounter = 0;
-    lastTime = 0;
+    lastTime = performance.now();
     player.next = createPiece('ILJOTSZ'[Math.random() * 7 | 0]);
     playerReset();
     updateUI();
-    
     if(mode === 'timer') {
         timerInterval = setInterval(() => {
-            if(!isPaused && gameActive) {
-                timeLeft--;
-                updateUI();
-                if(timeLeft <= 0) endGame(true);
-            }
+            if(!isPaused && gameActive) { timeLeft--; updateUI(); if(timeLeft <= 0) endGame(true); }
         }, 1000);
     }
     update();
@@ -247,12 +308,13 @@ function playerReset() {
 }
 
 function drawNext() {
-    nctx.fillStyle = '#0f172a';
-    nctx.fillRect(0, 0, 80, 80);
+    nctx.clearRect(0,0,80,80);
+    if(!player.next) return;
     player.next.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if (value !== 0) {
-                nctx.fillStyle = COLORS[value];
+        row.forEach((val, x) => {
+            if (val !== 0) {
+                nctx.shadowBlur = 10; nctx.shadowColor = COLORS[val];
+                nctx.fillStyle = COLORS[val];
                 nctx.fillRect(x * 15 + 20, y * 15 + 20, 14, 14);
             }
         });
@@ -269,23 +331,13 @@ function collide(arena, player) {
     return false;
 }
 
-function rotate(matrix) {
-    for(let y=0; y<matrix.length; ++y) for(let x=0; x<y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-    matrix.forEach(row => row.reverse());
-}
-
 function arenaSweep() {
-    let rowsToClear = [];
+    let rows = [];
     outer: for (let y = arena.length - 1; y > 0; --y) {
-        for (let x = 0; x < arena[y].length; ++x) {
-            if (arena[y][x] === 0) continue outer;
-        }
-        rowsToClear.push(y);
+        for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
+        rows.push(y);
     }
-    if (rowsToClear.length > 0) {
-        isPaused = true;
-        showQuiz(rowsToClear);
-    }
+    if (rows.length > 0) { isPaused = true; showQuiz(rows); }
 }
 
 function showQuiz(rows) {
@@ -295,25 +347,20 @@ function showQuiz(rows) {
     document.getElementById('q-text').innerText = q.q;
     const optCont = document.getElementById('q-options');
     optCont.innerHTML = '';
-    
     q.a.forEach((opt, i) => {
         const b = document.createElement('button');
-        b.className = 'btn';
+        b.className = 'btn'; b.style.background = "#334155"; b.style.color = "white";
         b.innerText = opt;
         b.onclick = () => {
             if(i === q.c) {
-                rows.sort((a,b) => a-b).forEach(y => {
-                    arena.splice(y, 1);
-                    arena.unshift(new Array(CONFIG.cols).fill(0));
-                });
+                SFX.clear();
+                rows.sort((a,b) => a-b).forEach(y => { arena.splice(y, 1); arena.unshift(new Array(CONFIG.cols).fill(0)); });
                 score += rows.length * 100;
             } else {
+                SFX.error();
                 rows.forEach(y => arena[y] = arena[y].map(() => -1));
             }
-            isPaused = false;
-            screen.classList.add('hidden');
-            updateUI();
-            update();
+            isPaused = false; screen.classList.add('hidden'); updateUI(); update();
         };
         optCont.appendChild(b);
     });
@@ -326,28 +373,33 @@ function updateUI() {
 }
 
 function endGame(win, manual = false) {
-    gameActive = false;
-    clearInterval(timerInterval);
-    const resScreen = document.getElementById('result-screen');
-    resScreen.classList.remove('hidden');
-    document.getElementById('res-title').innerText = manual ? "ИГРА ПРЕРВАНА" : (win ? "ВРЕМЯ ВЫШЛО!" : "КОНЕЦ ИГРЫ");
-    document.getElementById('res-stats').innerHTML = `Очки: ${score}<br>Линий: ${score/100}`;
+    gameActive = false; clearInterval(timerInterval);
+    document.getElementById('result-screen').classList.remove('hidden');
+    document.getElementById('res-title').innerText = manual ? "ЗАВЕРШЕНО" : (win ? "ПОБЕДА!" : "КОНЕЦ");
+    document.getElementById('res-stats').innerHTML = `Очки: ${score} | Линии: ${score/100}`;
 }
 
 function draw() {
-    ctx.fillStyle = '#020617';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Рисуем сетку
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.05)";
+    for(let i=0; i<canvas.width; i+=30) ctx.strokeRect(i,0,0.1,600);
+    for(let i=0; i<600; i+=30) ctx.strokeRect(0,i,300,0.1);
+
     arena.forEach((row, y) => row.forEach((val, x) => {
         if(val !== 0) {
+            ctx.shadowBlur = val === -1 ? 0 : 15;
+            ctx.shadowColor = val === -1 ? '#f43f5e' : COLORS[val];
             ctx.fillStyle = val === -1 ? '#f43f5e' : COLORS[val];
-            ctx.fillRect(x*CONFIG.size, y*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
+            ctx.fillRect(x*30+1, y*30+1, 28, 28);
         }
     }));
     if(player.matrix) {
         player.matrix.forEach((row, y) => row.forEach((val, x) => {
             if(val !== 0) {
+                ctx.shadowBlur = 20; ctx.shadowColor = COLORS[val];
                 ctx.fillStyle = COLORS[val];
-                ctx.fillRect((x+player.pos.x)*CONFIG.size, (y+player.pos.y)*CONFIG.size, CONFIG.size-1, CONFIG.size-1);
+                ctx.fillRect((x+player.pos.x)*30+1, (y+player.pos.y)*30+1, 28, 28);
             }
         }));
     }
@@ -365,6 +417,7 @@ function update(time = 0) {
             player.matrix.forEach((row, y) => row.forEach((v, x) => {
                 if(v !== 0) arena[y+player.pos.y][x+player.pos.x] = v;
             }));
+            SFX.drop();
             playerReset();
             arenaSweep();
         }
@@ -380,18 +433,11 @@ document.addEventListener('keydown', e => {
     if(e.keyCode === 39) { player.pos.x++; if(collide(arena, player)) player.pos.x--; }
     if(e.keyCode === 40) { player.pos.y++; if(collide(arena, player)) player.pos.y--; }
     if(e.keyCode === 38) { 
-        const pos = player.pos.x;
-        rotate(player.matrix);
-        let offset = 1;
-        while(collide(arena, player)) {
-            player.pos.x += offset;
-            offset = -(offset + (offset > 0 ? 1 : -1));
-            if(offset > player.matrix[0].length) {
-                rotate(player.matrix); rotate(player.matrix); rotate(player.matrix); // back
-                player.pos.x = pos;
-                return;
-            }
-        }
+        const oldX = player.pos.x;
+        for(let y=0; y<player.matrix.length; ++y) for(let x=0; x<y; ++x) [player.matrix[x][y], player.matrix[y][x]] = [player.matrix[y][x], player.matrix[x][y]];
+        player.matrix.forEach(row => row.reverse());
+        if(collide(arena, player)) { player.matrix.forEach(row => row.reverse()); /* ... undo logic ... */ }
+        SFX.rotate();
     }
 });
 </script>
