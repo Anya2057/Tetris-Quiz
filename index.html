@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <title>Tetris Quiz Pro</title>
     <style>
         :root {
             --bg: #020617;
@@ -32,7 +33,7 @@
             background: var(--panel);
             backdrop-filter: blur(12px);
             border-radius: 28px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 2px rgba(255,255,255,0.1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
@@ -41,7 +42,6 @@
             background: rgba(0, 0, 0, 0.8);
             border-radius: 12px;
             border: 3px solid #1e293b;
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
         }
 
         .side-panel { width: 220px; display: flex; flex-direction: column; gap: 15px; }
@@ -57,7 +57,6 @@
         .stat-label { font-size: 10px; color: #94a3b8; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
         .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
 
-        /* Наглядный джойстик */
         .controller-map {
             background: rgba(15, 23, 42, 0.5);
             padding: 15px;
@@ -78,7 +77,6 @@
             border-bottom: 4px solid #0f172a;
         }
         .key-hint { font-size: 8px; color: #94a3b8; font-weight: bold; }
-        .rotate-icon { font-size: 20px; color: var(--accent); }
 
         .btn {
             border: none; padding: 14px; border-radius: 14px;
@@ -126,7 +124,7 @@
         <div class="controller-map">
             <div class="d-pad">
                 <div></div>
-                <div class="key"><span class="rotate-icon">↻</span><span class="key-hint">▲</span></div>
+                <div class="key"><span>↻</span><span class="key-hint">▲</span></div>
                 <div></div>
                 <div class="key"><span>◄</span><span class="key-hint">ЛЕВО</span></div>
                 <div class="key"><span>▼</span><span class="key-hint">ВНИЗ</span></div>
@@ -135,35 +133,46 @@
         </div>
 
         <div class="btn-group" style="display:flex; flex-direction:column; gap:10px; margin-top: auto;">
-            <button class="btn btn-restart" onclick="resetGame()">🔄 Заново</button>
-            <button class="btn btn-finish" onclick="endGame(false, true)">🏁 Завершить</button>
+            <button class="btn btn-restart" onclick="resetGame()">🔄 Меню</button>
+            <button class="btn btn-finish" onclick="endGame(false, true)">🏁 Выйти</button>
         </div>
     </div>
 
     <div id="menu-screen" class="overlay">
-        <h1 style="font-size: 32px; color: var(--accent); margin-bottom: 10px;">TETRIS QUIZ</h1>
-        <p style="opacity: 0.5; margin-bottom: 30px;">Собирай линии и отвечай на вопросы</p>
-        <button class="btn" style="width: 220px; background: var(--accent); color: #020623; font-size: 16px;" onclick="initGame('timer')">ИГРАТЬ (5 МИН)</button>
-        <button class="btn" style="width: 220px; background: transparent; color: white; border: 1px solid #334155; margin-top: 12px;" onclick="initGame('infinite')">БЕСКОНЕЧНО</button>
+        <h1 style="font-size: 32px; color: var(--accent);">TETRIS QUIZ</h1>
+        <p style="opacity: 0.5; margin-bottom: 30px;">Объемные блоки и фейерверки!</p>
+        <button class="btn" style="width: 220px; background: var(--accent); color: #020623;" onclick="initGame('timer')">⏱️ СПРИНТ (5 МИН)</button>
+        <button class="btn" style="width: 220px; background: transparent; color: white; border: 1px solid #334155; margin-top: 12px;" onclick="initGame('infinite')">♾️ БЕСКОНЕЧНО</button>
     </div>
 
     <div id="quiz-screen" class="overlay hidden">
-        <div style="background: #1e293b; padding: 40px; border-radius: 24px; border: 1px solid var(--accent); width: 80%; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-            <h2 id="q-text" style="margin-bottom: 25px;">Вопрос</h2>
-            <div id="q-options" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        <div style="background: #1e293b; padding: 35px; border-radius: 24px; border: 2px solid var(--accent); width: 80%;">
+            <h2 id="q-text" style="margin-top:0">Вопрос</h2>
+            <div id="q-options" style="display: flex; flex-direction: column; gap: 10px;"></div>
         </div>
     </div>
 
     <div id="result-screen" class="overlay hidden">
-        <h1 id="res-title">РЕЗУЛЬТАТЫ</h1>
-        <div id="res-stats" style="font-size: 20px; line-height: 1.6;"></div>
-        <button class="btn" style="background: var(--accent); margin-top: 30px; width: 200px;" onclick="resetGame()">ИГРАТЬ ЕЩЕ</button>
+        <h1 id="res-title">ФИНИШ</h1>
+        <div id="res-stats" style="font-size: 24px; margin: 20px 0;"></div>
+        <button class="btn" style="background: var(--accent); width: 200px;" onclick="resetGame()">В МЕНЮ</button>
     </div>
 </div>
 
 <script>
-// --- ЗВУКИ (Web Audio) ---
+// --- КОНФИГУРАЦИЯ ---
+const CONFIG = { 
+    cols: 10, rows: 20, size: 30, speed: 800, 
+    questions: [
+        { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
+        { q: "Столица Франции?", a: ["Лион", "Париж", "Марсель"], c: 1 },
+        { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
+    ]
+};
+
+const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
 function playSFX(f, type, d) {
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
     o.type = type; o.frequency.setValueAtTime(f, audioCtx.currentTime);
@@ -177,66 +186,57 @@ const SFX = {
     rotate: () => playSFX(400, 'sine', 0.1),
     drop: () => playSFX(150, 'sine', 0.05),
     clear: () => { playSFX(600, 'sine', 0.2); setTimeout(()=>playSFX(800, 'sine', 0.2), 100); },
-    error: () => playSFX(100, 'sawtooth', 0.3)
+    error: () => playSFX(100, 'sawtooth', 0.3),
+    win: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playSFX(f, 'sine', 0.4), i * 150)); },
+    fail: () => { playSFX(150, 'sawtooth', 0.6); setTimeout(() => playSFX(100, 'sawtooth', 0.6), 200); }
 };
 
-// --- ОТРИСОВКА ОБЪЕМНОГО БЛОКА ---
-function drawBlock(ctx, x, y, color, size) {
-    const space = 2;
-    const s = size - space * 2;
-    const px = x * size + space;
-    const py = y * size + space;
-
-    // Основное тело
-    ctx.fillStyle = color;
-    ctx.fillRect(px, py, s, s);
-
-    // Свет (верхняя и левая грани)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.beginPath();
-    ctx.moveTo(px, py); ctx.lineTo(px + s, py); ctx.lineTo(px + s - 4, py + 4);
-    ctx.lineTo(px + 4, py + 4); ctx.lineTo(px + 4, py + s - 4); ctx.lineTo(px, py + s);
-    ctx.fill();
-
-    // Тень (нижняя и правая грани)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.moveTo(px + s, py + s); ctx.lineTo(px, py + s); ctx.lineTo(px + 4, py + s - 4);
-    ctx.lineTo(px + s - 4, py + s - 4); ctx.lineTo(px + s - 4, py + 4); ctx.lineTo(px + s, py);
-    ctx.fill();
-}
-
-// --- ФОН ---
-const bg = document.getElementById('bg-stars');
-const bctx = bg.getContext('2d');
-let stars = [];
-function initStars() {
-    bg.width = window.innerWidth; bg.height = window.innerHeight;
-    stars = Array.from({length: 80}, () => ({ x: Math.random()*bg.width, y: Math.random()*bg.height, s: Math.random()*2, v: Math.random()*0.4 }));
-}
-function animStars() {
-    bctx.fillStyle = '#020617'; bctx.fillRect(0,0,bg.width,bg.height);
-    bctx.fillStyle = '#fff';
-    stars.forEach(s => { bctx.beginPath(); bctx.arc(s.x, s.y, s.s, 0, 7); bctx.fill(); s.y += s.v; if(s.y > bg.height) s.y = 0; });
-    requestAnimationFrame(animStars);
-}
-window.onresize = initStars; initStars(); animStars();
-
-// --- ЛОГИКА ТЕТРИСА ---
-const CONFIG = { cols: 10, rows: 20, size: 30, speed: 800, questions: [
-    { q: "Как правильно?", a: ["Language", "Langage"], c: 0 },
-    { q: "2 + 2 * 2", a: ["8", "6"], c: 1 },
-    { q: "Столица Японии", a: ["Пекин", "Токио"], c: 1 }
-]};
-
+// --- ВИЗУАЛ (БЛОКИ, ФОН, ФЕЙЕРВЕРКИ) ---
 const canvas = document.getElementById('tetris');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-piece-canvas');
 const nctx = nextCanvas.getContext('2d');
+const bg = document.getElementById('bg-stars');
+const bctx = bg.getContext('2d');
 
+let stars = [], particles = [];
+
+function drawBlock(c, x, y, color, size) {
+    const s = size - 4; const px = x * size + 2; const py = y * size + 2;
+    c.fillStyle = color; c.fillRect(px, py, s, s);
+    c.fillStyle = 'rgba(255, 255, 255, 0.4)'; c.fillRect(px, py, s, 4); c.fillRect(px, py, 4, s);
+    c.fillStyle = 'rgba(0, 0, 0, 0.3)'; c.fillRect(px, py + s - 4, s, 4); c.fillRect(px + s - 4, py, 4, s);
+}
+
+function initStars() {
+    bg.width = window.innerWidth; bg.height = window.innerHeight;
+    stars = Array.from({length: 80}, () => ({ x: Math.random()*bg.width, y: Math.random()*bg.height, s: Math.random()*2, v: Math.random()*0.4 }));
+}
+
+function createFirework() {
+    const x = Math.random() * bg.width, y = Math.random() * bg.height;
+    const color = COLORS[Math.floor(Math.random() * 7) + 1];
+    for (let i = 0; i < 20; i++) {
+        particles.push({ x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 1, color });
+    }
+}
+
+function anim() {
+    bctx.fillStyle = '#020617'; bctx.fillRect(0,0,bg.width,bg.height);
+    bctx.fillStyle = '#fff';
+    stars.forEach(s => { bctx.beginPath(); bctx.arc(s.x, s.y, s.s, 0, 7); bctx.fill(); s.y += s.v; if(s.y > bg.height) s.y = 0; });
+    particles.forEach((p, i) => {
+        bctx.globalAlpha = p.life; bctx.fillStyle = p.color;
+        bctx.beginPath(); bctx.arc(p.x, p.y, 2, 0, 7); bctx.fill();
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02; if(p.life <= 0) particles.splice(i, 1);
+    });
+    bctx.globalAlpha = 1; requestAnimationFrame(anim);
+}
+initStars(); anim();
+
+// --- ЛОГИКА ИГРЫ ---
 let arena, score, gameActive, isPaused, timeLeft, timerInterval, dropCounter, lastTime;
 const player = { pos: {x: 0, y: 0}, matrix: null, next: null };
-const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 
 function createPiece(t) {
     if (t === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
@@ -271,17 +271,10 @@ function initGame(mode) {
 function playerReset() {
     player.matrix = player.next;
     player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
-    player.pos.y = 0;
-    player.pos.x = (CONFIG.cols/2|0) - (player.matrix[0].length/2|0);
-    drawNext();
-    if(collide(arena, player)) endGame(false);
-}
-
-function drawNext() {
+    player.pos.y = 0; player.pos.x = (CONFIG.cols/2|0) - (player.matrix[0].length/2|0);
     nctx.clearRect(0,0,80,80);
-    player.next.forEach((row, y) => row.forEach((v, x) => {
-        if(v) drawBlock(nctx, x + 0.5, y + 0.5, COLORS[v], 18);
-    }));
+    player.next.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(nctx, x + 0.5, y + 0.5, COLORS[v], 18); }));
+    if(collide(arena, player)) endGame(false);
 }
 
 function collide(a, p) {
@@ -294,15 +287,6 @@ function collide(a, p) {
     return false;
 }
 
-function arenaSweep() {
-    let rows = [];
-    outer: for (let y = arena.length - 1; y > 0; --y) {
-        for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
-        rows.push(y);
-    }
-    if (rows.length > 0) { isPaused = true; showQuiz(rows); }
-}
-
 function showQuiz(rows) {
     const q = CONFIG.questions[Math.random()*CONFIG.questions.length|0];
     const screen = document.getElementById('quiz-screen');
@@ -312,41 +296,38 @@ function showQuiz(rows) {
     optCont.innerHTML = '';
     q.a.forEach((opt, i) => {
         const b = document.createElement('button');
-        b.className = 'btn'; b.style.background = "#334155"; b.style.color = "white";
-        b.innerText = opt;
+        b.className = 'btn'; b.style.background = "#334155"; b.style.color = "white"; b.innerText = opt;
         b.onclick = () => {
             if(i === q.c) {
                 SFX.clear();
+                // "Лечим" всё поле: удаляем собранные линии И все серые блоки (-1)
                 rows.sort((a,b)=>a-b).forEach(y => { arena.splice(y, 1); arena.unshift(new Array(CONFIG.cols).fill(0)); });
+                for(let y=0; y<CONFIG.rows; y++) arena[y] = arena[y].map(v => v === -1 ? 0 : v);
                 score += rows.length * 100;
-            } else { SFX.error(); rows.forEach(y => arena[y] = arena[y].map(() => -1)); }
-            isPaused = false; screen.classList.add('hidden'); updateUI(); update();
+            } else { 
+                SFX.error(); 
+                rows.forEach(y => arena[y] = arena[y].map(() => -1)); 
+            }
+            isPaused = false; screen.classList.add('hidden'); update();
         };
         optCont.appendChild(b);
     });
+}
+
+function endGame(win, manual=false) {
+    gameActive = false; clearInterval(timerInterval);
+    document.getElementById('result-screen').classList.remove('hidden');
+    const title = document.getElementById('res-title');
+    if(manual) title.innerText = "ВЫХОД";
+    else if(win) { title.innerText = "ПОБЕДА! 🎉"; SFX.win(); let fw = setInterval(createFirework, 200); setTimeout(()=>clearInterval(fw), 3000); }
+    else { title.innerText = "GAME OVER"; SFX.fail(); }
+    document.getElementById('res-stats').innerText = `Счёт: ${score}`;
 }
 
 function updateUI() {
     document.getElementById('score-val').innerText = score;
     const m = Math.floor(timeLeft/60), s = timeLeft%60;
     document.getElementById('timer-val').innerText = `${m}:${s<10?'0':''}${s}`;
-}
-
-function endGame(win, manual=false) {
-    gameActive = false; clearInterval(timerInterval);
-    document.getElementById('result-screen').classList.remove('hidden');
-    document.getElementById('res-title').innerText = manual ? "ИГРА ПРЕРВАНА" : (win ? "ВРЕМЯ ВЫШЛО" : "ИГРА ОКОНЧЕНА");
-    document.getElementById('res-stats').innerHTML = `Счёт: ${score}<br>Линий: ${score/100}`;
-}
-
-function draw() {
-    ctx.clearRect(0,0,300,600);
-    arena.forEach((row, y) => row.forEach((v, x) => {
-        if(v) drawBlock(ctx, x, y, v === -1 ? '#444' : COLORS[v], 30);
-    }));
-    player.matrix.forEach((row, y) => row.forEach((v, x) => {
-        if(v) drawBlock(ctx, x + player.pos.x, y + player.pos.y, COLORS[v], 30);
-    }));
 }
 
 function update(time = 0) {
@@ -356,14 +337,21 @@ function update(time = 0) {
         player.pos.y++;
         if(collide(arena, player)) {
             player.pos.y--;
-            player.matrix.forEach((row, y) => row.forEach((v, x) => {
-                if(v) arena[y+player.pos.y][x+player.pos.x] = v;
-            }));
-            SFX.drop(); playerReset(); arenaSweep();
+            player.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) arena[y+player.pos.y][x+player.pos.x] = v; }));
+            SFX.drop(); playerReset();
+            let rows = [];
+            outer: for (let y = arena.length - 1; y > 0; --y) {
+                for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
+                rows.push(y);
+            }
+            if(rows.length > 0) { isPaused = true; showQuiz(rows); }
         }
         dropCounter = 0;
     }
-    draw(); requestAnimationFrame(update);
+    ctx.clearRect(0,0,300,600);
+    arena.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, x, y, v === -1 ? '#444' : COLORS[v], 30); }));
+    player.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, x + player.pos.x, y + player.pos.y, COLORS[v], 30); }));
+    requestAnimationFrame(update);
 }
 
 document.addEventListener('keydown', e => {
@@ -373,10 +361,4 @@ document.addEventListener('keydown', e => {
     if(e.keyCode === 40) { player.pos.y++; if(collide(arena, player)) player.pos.y--; }
     if(e.keyCode === 38) {
         const oldM = player.matrix;
-        player.matrix = player.matrix[0].map((_, i) => player.matrix.map(row => row[i]).reverse());
-        if(collide(arena, player)) player.matrix = oldM; else SFX.rotate();
-    }
-});
-</script>
-</body>
-</html>
+        player.matrix = player.matrix[0].map((_, i) => player.matrix.map(row
