@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Tetris Quiz Pro</title>
+    <title>Neon Tetris Quiz Pro</title>
     <style>
         :root {
             --bg: #020617;
-            --panel: rgba(30, 41, 59, 0.7);
+            --panel: rgba(15, 23, 42, 0.8);
             --accent: #38bdf8;
             --danger: #f43f5e;
             --text: #f8fafc;
@@ -16,89 +16,53 @@
             background: var(--bg);
             color: var(--text);
             font-family: 'Segoe UI', system-ui, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; overflow: hidden;
         }
 
-        /* Звезды строго на заднем плане и не мешают кликам */
-        #bg-stars { 
-            position: fixed; 
-            top: 0; left: 0; 
-            z-index: -1; 
-            pointer-events: none; 
-        }
+        #bg-stars { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
 
         #game-wrapper {
-            display: flex;
-            gap: 25px;
-            padding: 25px;
+            display: flex; gap: 30px; padding: 30px;
             background: var(--panel);
-            backdrop-filter: blur(12px);
-            border-radius: 28px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
 
         canvas#tetris {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 12px;
-            border: 3px solid #1e293b;
+            background: #000;
+            border-radius: 16px;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        .side-panel { width: 220px; display: flex; flex-direction: column; gap: 15px; }
+        .side-panel { width: 240px; display: flex; flex-direction: column; gap: 20px; }
 
         .stat-card {
-            background: rgba(15, 23, 42, 0.9);
-            padding: 12px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(2, 6, 23, 0.6);
+            padding: 15px; border-radius: 20px;
+            text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .stat-label { font-size: 10px; color: #94a3b8; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
-
-        .controller-map {
-            background: rgba(15, 23, 42, 0.5);
-            padding: 15px;
-            border-radius: 18px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .d-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .key {
-            width: 42px; height: 42px;
-            background: #334155;
-            border-radius: 10px;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            border-bottom: 4px solid #0f172a;
-        }
-        .key-hint { font-size: 8px; color: #94a3b8; font-weight: bold; }
+        .stat-label { font-size: 11px; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
 
         .btn {
-            border: none; padding: 14px; border-radius: 14px;
-            font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            gap: 10px; transition: all 0.2s;
+            border: none; padding: 16px; border-radius: 16px;
+            font-weight: bold; cursor: pointer; transition: all 0.2s;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-restart { background: #475569; color: white; }
-        .btn-finish { background: var(--danger); color: white; }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-restart { background: #334155; color: white; }
+        .btn-finish { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3); }
+        .btn:hover { transform: translateY(-3px); filter: brightness(1.2); }
 
         .overlay { 
-            position: absolute; inset: 0; background: rgba(2, 6, 23, 0.96); 
-            z-index: 100; border-radius: 28px; 
+            position: absolute; inset: 0; background: rgba(2, 6, 23, 0.98); 
+            z-index: 100; border-radius: 32px; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            text-align: center; padding: 30px; 
         }
         .hidden { display: none !important; }
     </style>
@@ -112,140 +76,117 @@
 
     <div class="side-panel">
         <div class="stat-card">
-            <div class="stat-label">СЛЕДУЮЩАЯ</div>
-            <canvas id="next-piece-canvas" width="80" height="80"></canvas>
+            <div class="stat-label">NEXT UNIT</div>
+            <canvas id="next-piece-canvas" width="100" height="100"></canvas>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="stat-card">
-                <div class="stat-label">ВРЕМЯ</div>
-                <div id="timer-val" class="stat-value" style="font-size: 18px;">05:00</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">ОЧКИ</div>
-                <div id="score-val" class="stat-value" style="font-size: 18px;">0</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">TIME LEFT</div>
+            <div id="timer-val" class="stat-value">05:00</div>
         </div>
 
-        <div class="controller-map">
-            <div class="d-pad">
-                <div></div>
-                <div class="key"><span>↻</span><span class="key-hint">▲</span></div>
-                <div></div>
-                <div class="key"><span>◄</span><span class="key-hint">ЛЕВО</span></div>
-                <div class="key"><span>▼</span><span class="key-hint">ВНИЗ</span></div>
-                <div class="key"><span>►</span><span class="key-hint">ПРАВО</span></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">SCORE</div>
+            <div id="score-val" class="stat-value">0</div>
         </div>
 
-        <div class="btn-group" style="display:flex; flex-direction:column; gap:10px; margin-top: auto;">
-            <button class="btn btn-restart" onclick="resetGame()">🔄 Меню</button>
-            <button class="btn btn-finish" onclick="endGame(false, true)">🏁 Выйти</button>
+        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-restart" onclick="resetGame()">Menu</button>
+            <button class="btn btn-finish" onclick="endGame(false, true)">Exit</button>
         </div>
     </div>
 
     <div id="menu-screen" class="overlay">
-        <h1 style="font-size: 32px; color: var(--accent);">TETRIS QUIZ</h1>
-        <p style="opacity: 0.5; margin-bottom: 30px;">Твой оригинальный стиль!</p>
-        <button class="btn" style="width: 220px; background: var(--accent); color: #020623;" onclick="initGame('timer')">⏱️ СПРИНТ (5 МИН)</button>
-        <button class="btn" style="width: 220px; background: transparent; color: white; border: 1px solid #334155; margin-top: 12px;" onclick="initGame('infinite')">♾️ БЕСКОНЕЧНО</button>
+        <h1 style="font-size: 42px; color: var(--accent); margin-bottom: 10px; filter: drop-shadow(0 0 15px var(--accent));">NEON QUIZ</h1>
+        <p style="color: #64748b; margin-bottom: 30px;">High-end Performance Version</p>
+        <button class="btn" style="width: 240px; background: var(--accent); color: #020623;" onclick="initGame('timer')">Start Sprint</button>
     </div>
 
     <div id="quiz-screen" class="overlay hidden">
-        <div style="background: #1e293b; padding: 35px; border-radius: 24px; border: 2px solid var(--accent); width: 80%;">
-            <h2 id="q-text" style="margin-top:0">Вопрос</h2>
-            <div id="q-options" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <div style="background: #1e293b; padding: 40px; border-radius: 28px; border: 2px solid var(--accent); width: 80%; box-shadow: 0 0 40px rgba(56, 189, 248, 0.2);">
+            <h2 id="q-text">Question?</h2>
+            <div id="q-options" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
-    </div>
-
-    <div id="result-screen" class="overlay hidden">
-        <h1 id="res-title">ФИНИШ</h1>
-        <div id="res-stats" style="font-size: 24px; margin: 20px 0;"></div>
-        <button class="btn" style="background: var(--accent); width: 200px;" onclick="resetGame()">В МЕНЮ</button>
     </div>
 </div>
 
 <script>
-// --- КОНФИГУРАЦИЯ (ТВОЯ ОРИГИНАЛЬНАЯ) ---
-const CONFIG = { 
-    cols: 10, rows: 20, size: 30, speed: 800, 
-    questions: [
-        { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
-        { q: "Столица Франции?", a: ["Лион", "Париж", "Марсель"], c: 1 },
-        { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
-    ]
-};
-
-const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
+// --- AUDIO ENGINE ---
 let audioCtx;
+function getAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
 
-function getAudioCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    return audioCtx;
-}
-
-function playSFX(f, type, d) {
-    const a = getAudioCtx();
-    const o = a.createOscillator(); const g = a.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, a.currentTime);
-    g.gain.setValueAtTime(0.1, a.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + d);
+function playSynth(freq, type, duration, vol = 0.1) {
+    const a = getAudio(); const o = a.createOscillator(); const g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, a.currentTime);
+    g.gain.setValueAtTime(vol, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + duration);
     o.connect(g); g.connect(a.destination);
-    o.start(); o.stop(a.currentTime + d);
+    o.start(); o.stop(a.currentTime + duration);
 }
 
 const SFX = {
-    rotate: () => playSFX(400, 'sine', 0.1),
-    drop: () => playSFX(150, 'sine', 0.05),
-    clear: () => { playSFX(600, 'sine', 0.2); setTimeout(()=>playSFX(800, 'sine', 0.2), 100); },
-    error: () => playSFX(100, 'sawtooth', 0.3),
-    win: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playSFX(f, 'sine', 0.4), i * 150)); },
-    fail: () => { playSFX(150, 'sawtooth', 0.6); setTimeout(() => playSFX(100, 'sawtooth', 0.6), 200); }
+    rotate: () => playSynth(440, 'triangle', 0.1),
+    drop: () => playSynth(100, 'sine', 0.2, 0.2),
+    clear: () => { playSynth(880, 'sine', 0.4); setTimeout(() => playSynth(1100, 'sine', 0.4), 100); },
+    error: () => playSynth(110, 'sawtooth', 0.4),
+    win: () => [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playSynth(f, 'sine', 0.5), i * 120))
 };
 
-// --- ВИЗУАЛ (ТВОИ ОРИГИНАЛЬНЫЕ БЛОКИ И ЗВЕЗДЫ) ---
+// --- VISUALS (NEON STYLE) ---
+const COLORS = [null, '#00f2ff', '#ffd700', '#ff00ff', '#00ff88', '#ff3366', '#ff6600', '#7744ff'];
 const canvas = document.getElementById('tetris');
 const ctx = canvas.getContext('2d');
 const nctx = document.getElementById('next-piece-canvas').getContext('2d');
 const bg = document.getElementById('bg-stars');
 const bctx = bg.getContext('2d');
 
-let stars = [], particles = [];
+function drawNeonBlock(c, x, y, color, size, isNext = false) {
+    const p = isNext ? 2 : 3;
+    const s = size - p * 2;
+    const px = x * size + p;
+    const py = y * size + p;
 
-function drawBlock(c, x, y, color, size) {
-    const s = size - 4; const px = x * size + 2; const py = y * size + 2;
-    c.fillStyle = color; c.fillRect(px, py, s, s);
-    c.fillStyle = 'rgba(255, 255, 255, 0.4)'; c.fillRect(px, py, s, 4); c.fillRect(px, py, 4, s);
-    c.fillStyle = 'rgba(0, 0, 0, 0.3)'; c.fillRect(px, py + s - 4, s, 4); c.fillRect(px + s - 4, py, 4, s);
+    // Свечение (Bloom)
+    c.shadowBlur = 15;
+    c.shadowColor = color;
+    
+    // Рамка блока
+    c.strokeStyle = color;
+    c.lineWidth = 2;
+    c.strokeRect(px, py, s, s);
+    
+    // Внутренний блик
+    c.shadowBlur = 0;
+    c.fillStyle = color + '33'; // Прозрачный центр
+    c.fillRect(px + 4, py + 4, s - 8, s - 8);
+    
+    // Точка в центре
+    c.fillStyle = color;
+    c.fillRect(px + s/2 - 2, py + s/2 - 2, 4, 4);
 }
 
+// --- STARS BACKGROUND ---
+let stars = [];
 function initStars() {
     bg.width = window.innerWidth; bg.height = window.innerHeight;
-    stars = Array.from({length: 80}, () => ({ x: Math.random()*bg.width, y: Math.random()*bg.height, s: Math.random()*2, v: Math.random()*0.4 }));
+    stars = Array.from({length: 100}, () => ({ 
+        x: Math.random()*bg.width, y: Math.random()*bg.height, 
+        s: Math.random()*1.5, v: Math.random()*0.3 
+    }));
 }
-
-function createFirework() {
-    const x = Math.random() * bg.width, y = Math.random() * bg.height;
-    const color = COLORS[Math.floor(Math.random() * 7) + 1];
-    for (let i = 0; i < 20; i++) {
-        particles.push({ x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 1, color });
-    }
-}
-
-function anim() {
+function animStars() {
     bctx.fillStyle = '#020617'; bctx.fillRect(0,0,bg.width,bg.height);
     bctx.fillStyle = '#fff';
-    stars.forEach(s => { bctx.beginPath(); bctx.arc(s.x, s.y, s.s, 0, 7); bctx.fill(); s.y += s.v; if(s.y > bg.height) s.y = 0; });
-    particles.forEach((p, i) => {
-        bctx.globalAlpha = p.life; bctx.fillStyle = p.color;
-        bctx.beginPath(); bctx.arc(p.x, p.y, 2, 0, 7); bctx.fill();
-        p.x += p.vx; p.y += p.vy; p.life -= 0.02; if(p.life <= 0) particles.splice(i, 1);
+    stars.forEach(s => {
+        bctx.beginPath(); bctx.arc(s.x, s.y, s.s, 0, Math.PI*2); bctx.fill();
+        s.y += s.v; if(s.y > bg.height) s.y = 0;
     });
-    bctx.globalAlpha = 1; requestAnimationFrame(anim);
+    requestAnimationFrame(animStars);
 }
-initStars(); anim();
+initStars(); animStars();
 
-// --- ЛОГИКА ИГРЫ (ОРИГИНАЛЬНАЯ) ---
+// --- GAME LOGIC ---
+const CONFIG = { cols: 10, rows: 20, size: 30, speed: 800 };
 let arena, score, gameActive, isPaused, timeLeft, timerInterval, dropCounter, lastTime;
 const player = { pos: {x: 0, y: 0}, matrix: null, next: null };
 
@@ -259,21 +200,14 @@ function createPiece(t) {
     if (t === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
 }
 
-function resetGame() {
-    clearInterval(timerInterval);
-    document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
-    document.getElementById('menu-screen').classList.remove('hidden');
-    gameActive = false;
-}
-
 function initGame(mode) {
-    getAudioCtx();
+    getAudio();
     document.getElementById('menu-screen').classList.add('hidden');
     arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
     score = 0; gameActive = true; dropCounter = 0; lastTime = performance.now();
     timeLeft = mode === 'timer' ? 300 : 9999;
     player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
-    playerReset(); updateUI();
+    playerReset();
     if(mode === 'timer') {
         timerInterval = setInterval(() => { if(!isPaused && gameActive) { timeLeft--; updateUI(); if(timeLeft<=0) endGame(true); } }, 1000);
     }
@@ -283,9 +217,14 @@ function initGame(mode) {
 function playerReset() {
     player.matrix = player.next;
     player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
-    player.pos.y = 0; player.pos.x = (CONFIG.cols/2|0) - (player.matrix[0].length/2|0);
-    nctx.clearRect(0,0,80,80);
-    player.next.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(nctx, x + 0.5, y + 0.5, COLORS[v], 18); }));
+    player.pos.y = 0;
+    player.pos.x = (CONFIG.cols/2|0) - (player.matrix[0].length/2|0);
+    
+    nctx.clearRect(0,0,100,100);
+    player.next.forEach((row, y) => row.forEach((v, x) => {
+        if(v) drawNeonBlock(nctx, x + 1, y + 1, COLORS[v], 25, true);
+    }));
+    
     if(collide(arena, player)) endGame(false);
 }
 
@@ -299,48 +238,6 @@ function collide(a, p) {
     return false;
 }
 
-function showQuiz(rows) {
-    const q = CONFIG.questions[Math.random()*CONFIG.questions.length|0];
-    const screen = document.getElementById('quiz-screen');
-    screen.classList.remove('hidden');
-    document.getElementById('q-text').innerText = q.q;
-    const optCont = document.getElementById('q-options');
-    optCont.innerHTML = '';
-    q.a.forEach((opt, i) => {
-        const b = document.createElement('button');
-        b.className = 'btn'; b.style.background = "#334155"; b.style.color = "white"; b.innerText = opt;
-        b.onclick = () => {
-            if(i === q.c) {
-                SFX.clear();
-                rows.sort((a,b)=>a-b).forEach(y => { arena.splice(y, 1); arena.unshift(new Array(CONFIG.cols).fill(0)); });
-                for(let y=0; y<CONFIG.rows; y++) arena[y] = arena[y].map(v => v === -1 ? 0 : v);
-                score += rows.length * 100;
-            } else { 
-                SFX.fail(); 
-                rows.forEach(y => arena[y] = arena[y].map(() => -1)); 
-            }
-            isPaused = false; screen.classList.add('hidden'); update();
-        };
-        optCont.appendChild(b);
-    });
-}
-
-function endGame(win, manual=false) {
-    gameActive = false; clearInterval(timerInterval);
-    document.getElementById('result-screen').classList.remove('hidden');
-    const title = document.getElementById('res-title');
-    if(manual) title.innerText = "ВЫХОД";
-    else if(win) { title.innerText = "ПОБЕДА! 🎉"; SFX.win(); let fw = setInterval(createFirework, 200); setTimeout(()=>clearInterval(fw), 3000); }
-    else { title.innerText = "GAME OVER"; SFX.fail(); }
-    document.getElementById('res-stats').innerText = `Счёт: ${score}`;
-}
-
-function updateUI() {
-    document.getElementById('score-val').innerText = score;
-    const m = Math.floor(timeLeft/60), s = timeLeft%60;
-    document.getElementById('timer-val').innerText = `${m}:${s<10?'0':''}${s}`;
-}
-
 function update(time = 0) {
     if(!gameActive || isPaused) return;
     const dt = time - lastTime; lastTime = time; dropCounter += dt;
@@ -349,20 +246,51 @@ function update(time = 0) {
         if(collide(arena, player)) {
             player.pos.y--;
             player.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) arena[y+player.pos.y][x+player.pos.x] = v; }));
-            SFX.drop(); playerReset();
-            let rows = [];
-            outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
-                rows.push(y);
-            }
-            if(rows.length > 0) { isPaused = true; showQuiz(rows); }
+            SFX.drop();
+            playerReset();
+            checkLines();
         }
         dropCounter = 0;
     }
-    ctx.clearRect(0,0,300,600);
-    arena.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, x, y, v === -1 ? '#444' : COLORS[v], 30); }));
-    player.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) drawBlock(ctx, x + player.pos.x, y + player.pos.y, COLORS[v], 30); }));
+    draw();
     requestAnimationFrame(update);
+}
+
+function checkLines() {
+    let rowsCleared = 0;
+    outer: for (let y = arena.length - 1; y > 0; --y) {
+        for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
+        arena.splice(y, 1);
+        arena.unshift(new Array(CONFIG.cols).fill(0));
+        rowsCleared++; y++;
+    }
+    if(rowsCleared > 0) { score += rowsCleared * 100; SFX.clear(); updateUI(); }
+}
+
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Сетка (еле заметная)
+    ctx.strokeStyle = '#111';
+    for(let i=0; i<canvas.width; i+=30) ctx.strokeRect(i, 0, 1, canvas.height);
+    
+    arena.forEach((row, y) => row.forEach((v, x) => { if(v) drawNeonBlock(ctx, x, y, COLORS[v], 30); }));
+    player.matrix.forEach((row, y) => row.forEach((v, x) => { if(v) drawNeonBlock(ctx, x + player.pos.x, y + player.pos.y, COLORS[v], 30); }));
+}
+
+function updateUI() {
+    document.getElementById('score-val').innerText = score;
+    const m = Math.floor(timeLeft/60), s = timeLeft%60;
+    document.getElementById('timer-val').innerText = `${m}:${s<10?'0':''}${s}`;
+}
+
+function resetGame() { location.reload(); }
+
+function endGame(win, manual) {
+    gameActive = false;
+    alert(manual ? "Game Closed" : "Game Over! Score: " + score);
+    resetGame();
 }
 
 document.addEventListener('keydown', e => {
