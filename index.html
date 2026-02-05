@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Tetris Quiz Final Pro</title>
+    <title>Tetris Quiz - Fixed</title>
     <style>
         :root {
             --bg: #020617;
@@ -20,18 +20,19 @@
             min-height: 100vh; margin: 0; overflow: hidden;
         }
 
-        /* Ключевое исправление: фон не мешает кликам */
+        /* ИСПРАВЛЕНИЕ: Фон теперь не мешает кликать по кнопкам */
         #bg-stars { 
             position: fixed; top: 0; left: 0; 
-            z-index: 0; 
+            z-index: 1; 
             pointer-events: none; 
         }
 
         #game-wrapper {
             display: flex; gap: 20px; padding: 25px;
-            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px);
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px);
             border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative; z-index: 10;
+            position: relative; 
+            z-index: 10; /* Поднимаем игру выше фона */
         }
 
         canvas#tetris { background: #000; border-radius: 12px; border: 3px solid #334155; }
@@ -48,7 +49,9 @@
 
         .btn {
             border: none; padding: 14px; border-radius: 14px; font-weight: bold;
-            cursor: pointer; transition: 0.2s; position: relative; z-index: 110;
+            cursor: pointer; transition: 0.2s; 
+            position: relative; 
+            z-index: 1000; /* Кнопки ВСЕГДА сверху */
         }
         .btn-mode { background: var(--accent); color: #020617; width: 220px; margin-bottom: 12px; }
         .btn-restart { background: #475569; color: white; width: 100%; }
@@ -111,15 +114,14 @@
 </div>
 
 <script>
+// --- КОНСТАНТЫ И ЗВУКИ ---
 const CONFIG = { 
     cols: 10, rows: 20, size: 30, speed: 800,
     questions: [
         { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
-        { q: "Столица Франции?", a: ["Париж", "Лион", "Берлин"], c: 0 },
         { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
     ]
 };
-
 const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 let audioCtx;
 
@@ -142,28 +144,31 @@ const SFX = {
     fail: () => { playSFX(120, 'sawtooth', 0.8, 0.3); setTimeout(() => playSFX(80, 'sawtooth', 1.0, 0.3), 300); }
 };
 
+// --- ВИЗУАЛИЗАЦИЯ (ФОН И БЛОКИ) ---
 const canvas = document.getElementById('tetris');
 const ctx = canvas.getContext('2d');
 const bg = document.getElementById('bg-stars');
 const bctx = bg.getContext('2d');
 const nctx = document.getElementById('next-piece-canvas').getContext('2d');
-
-let arena, score, gameActive = false, isPaused = false, timeLeft, timerInterval, dropCounter, lastTime, particles = [];
+let particles = [];
 
 function drawBlock(c, x, y, color, size) {
     const s = size - 2; const px = x * size + 1; const py = y * size + 1;
     c.fillStyle = color; c.fillRect(px, py, s, s);
-    c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.moveTo(px,py); c.lineTo(px+s,py); c.lineTo(px+s-4,py+4); c.lineTo(px+4,py+4); c.fill();
+    // Блики (светлые грани)
+    c.fillStyle = 'rgba(255,255,255,0.4)';
+    c.beginPath(); c.moveTo(px,py); c.lineTo(px+s,py); c.lineTo(px+s-4,py+4); c.lineTo(px+4,py+4); c.fill();
     c.beginPath(); c.moveTo(px,py); c.lineTo(px+4,py+4); c.lineTo(px+4,py+s-4); c.lineTo(px,py+s); c.fill();
-    c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.moveTo(px,py+s); c.lineTo(px+4,py+s-4); c.lineTo(px+s-4,py+s-4); c.lineTo(px+s,py+s); c.fill();
-    c.beginPath(); c.moveTo(px+s,py); c.lineTo(px+s-4,py+4); c.lineTo(px+s-4,py+s-4); c.lineTo(px+s,py+s); c.fill();
+    // Тени (темные грани)
+    c.fillStyle = 'rgba(0,0,0,0.3)';
+    c.beginPath(); c.moveTo(px,py+s); c.lineTo(px+4,py+s-4); c.lineTo(px+s-4,py+s-4); c.lineTo(px+s,py+s); c.fill();
 }
 
 function createFirework() {
     const x = Math.random() * bg.width, y = Math.random() * bg.height;
     const color = COLORS[Math.floor(Math.random() * 7) + 1];
     for (let i = 0; i < 30; i++) {
-        particles.push({ x, y, vx: (Math.random()-0.5)*18, vy: (Math.random()-0.5)*18, life: 1, color });
+        particles.push({ x, y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 1, color });
     }
 }
 
@@ -179,20 +184,9 @@ function anim() {
 }
 anim();
 
+// --- ЛОГИКА ТЕТРИСА ---
+let arena, score, gameActive = false, isPaused = false, timeLeft, timerInterval, dropCounter, lastTime;
 let player = { pos: {x: 0, y: 0}, matrix: null, next: null };
-
-function initGame(mode) {
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    document.getElementById('menu-screen').classList.add('hidden');
-    arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
-    score = 0; gameActive = true; isPaused = false; dropCounter = 0; lastTime = performance.now();
-    timeLeft = mode === 'timer' ? 300 : 99999;
-    player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
-    playerReset(); updateUI();
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => { if(!isPaused && gameActive && mode === 'timer') { timeLeft--; updateUI(); if(timeLeft <= 0) endGame(true); } }, 1000);
-    update();
-}
 
 function createPiece(t) {
     if (t === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
@@ -202,6 +196,24 @@ function createPiece(t) {
     if (t === 'J') return [[0,5,0],[0,5,0],[5,5,0]];
     if (t === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
     if (t === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
+}
+
+function initGame(mode) {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.getElementById('menu-screen').classList.add('hidden');
+    arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
+    score = 0; gameActive = true; isPaused = false; dropCounter = 0; lastTime = performance.now();
+    timeLeft = mode === 'timer' ? 300 : 99999;
+    player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
+    playerReset();
+    updateUI();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if(!isPaused && gameActive && mode === 'timer') {
+            timeLeft--; updateUI(); if(timeLeft <= 0) endGame(true);
+        }
+    }, 1000);
+    update();
 }
 
 function playerReset() {
@@ -233,7 +245,8 @@ function showQuiz(rows) {
     q.a.forEach((opt, i) => {
         const b = document.createElement('button');
         b.className = 'btn'; b.innerText = opt;
-        b.onclick = () => {
+        b.onclick = (e) => {
+            e.stopPropagation(); // Защита от лишних кликов
             if(i === q.c) {
                 SFX.clear();
                 rows.forEach(y => { arena.splice(y, 1); arena.unshift(new Array(CONFIG.cols).fill(0)); });
@@ -251,10 +264,10 @@ function endGame(win) {
     document.getElementById('result-screen').classList.remove('hidden');
     const title = document.getElementById('res-title');
     if(win) {
-        title.innerText = "ПОБЕДА! 🎉"; title.style.color = "var(--accent)";
-        SFX.win(); let fwCount = 0; 
+        title.innerText = "ПОБЕДА! 🎉"; SFX.win(); 
+        let fwCount = 0; 
         let fw = setInterval(() => { createFirework(); fwCount++; if(fwCount > 20) clearInterval(fw); }, 200);
-    } else { title.innerText = "GAME OVER"; title.style.color = "var(--danger)"; SFX.fail(); }
+    } else { title.innerText = "GAME OVER"; SFX.fail(); }
     document.getElementById('res-stats').innerText = `Счёт: ${score}`;
 }
 
