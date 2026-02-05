@@ -16,26 +16,32 @@
             background: var(--bg);
             color: var(--text);
             font-family: 'Segoe UI', system-ui, sans-serif;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0; overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
 
-        /* ИСПРАВЛЕНИЕ: Звезды строго сзади, клики проходят насквозь */
+        /* Звезды строго на заднем плане и не мешают кликам */
         #bg-stars { 
-            position: fixed; top: 0; left: 0; 
+            position: fixed; 
+            top: 0; left: 0; 
             z-index: -1; 
             pointer-events: none; 
         }
 
         #game-wrapper {
-            display: flex; gap: 25px; padding: 25px;
+            display: flex;
+            gap: 25px;
+            padding: 25px;
             background: var(--panel);
             backdrop-filter: blur(12px);
             border-radius: 28px;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
-            z-index: 10;
         }
 
         canvas#tetris {
@@ -48,8 +54,10 @@
 
         .stat-card {
             background: rgba(15, 23, 42, 0.9);
-            padding: 12px; border-radius: 16px;
-            text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stat-label { font-size: 10px; color: #94a3b8; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
@@ -57,15 +65,20 @@
 
         .controller-map {
             background: rgba(15, 23, 42, 0.5);
-            padding: 15px; border-radius: 18px;
-            display: flex; flex-direction: column; align-items: center;
+            padding: 15px;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .d-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .key {
-            width: 42px; height: 42px; background: #334155;
-            border-radius: 10px; display: flex; flex-direction: column;
+            width: 42px; height: 42px;
+            background: #334155;
+            border-radius: 10px;
+            display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             border-bottom: 4px solid #0f172a;
         }
@@ -76,7 +89,6 @@
             font-weight: bold; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             gap: 10px; transition: all 0.2s;
-            position: relative; z-index: 100;
         }
         .btn-restart { background: #475569; color: white; }
         .btn-finish { background: var(--danger); color: white; }
@@ -134,7 +146,7 @@
 
     <div id="menu-screen" class="overlay">
         <h1 style="font-size: 32px; color: var(--accent);">TETRIS QUIZ</h1>
-        <p style="opacity: 0.5; margin-bottom: 30px;">Твоя любимая версия!</p>
+        <p style="opacity: 0.5; margin-bottom: 30px;">Твой оригинальный стиль!</p>
         <button class="btn" style="width: 220px; background: var(--accent); color: #020623;" onclick="initGame('timer')">⏱️ СПРИНТ (5 МИН)</button>
         <button class="btn" style="width: 220px; background: transparent; color: white; border: 1px solid #334155; margin-top: 12px;" onclick="initGame('infinite')">♾️ БЕСКОНЕЧНО</button>
     </div>
@@ -154,11 +166,12 @@
 </div>
 
 <script>
+// --- КОНФИГУРАЦИЯ (ТВОЯ ОРИГИНАЛЬНАЯ) ---
 const CONFIG = { 
     cols: 10, rows: 20, size: 30, speed: 800, 
     questions: [
         { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
-        { q: "Столица Франции?", a: ["Париж", "Марсель"], c: 0 },
+        { q: "Столица Франции?", a: ["Лион", "Париж", "Марсель"], c: 1 },
         { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
     ]
 };
@@ -166,13 +179,13 @@ const CONFIG = {
 const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 let audioCtx;
 
-function getCtx() {
+function getAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     return audioCtx;
 }
 
 function playSFX(f, type, d) {
-    const a = getCtx();
+    const a = getAudioCtx();
     const o = a.createOscillator(); const g = a.createGain();
     o.type = type; o.frequency.setValueAtTime(f, a.currentTime);
     g.gain.setValueAtTime(0.1, a.currentTime);
@@ -190,6 +203,7 @@ const SFX = {
     fail: () => { playSFX(150, 'sawtooth', 0.6); setTimeout(() => playSFX(100, 'sawtooth', 0.6), 200); }
 };
 
+// --- ВИЗУАЛ (ТВОИ ОРИГИНАЛЬНЫЕ БЛОКИ И ЗВЕЗДЫ) ---
 const canvas = document.getElementById('tetris');
 const ctx = canvas.getContext('2d');
 const nctx = document.getElementById('next-piece-canvas').getContext('2d');
@@ -231,6 +245,7 @@ function anim() {
 }
 initStars(); anim();
 
+// --- ЛОГИКА ИГРЫ (ОРИГИНАЛЬНАЯ) ---
 let arena, score, gameActive, isPaused, timeLeft, timerInterval, dropCounter, lastTime;
 const player = { pos: {x: 0, y: 0}, matrix: null, next: null };
 
@@ -252,7 +267,7 @@ function resetGame() {
 }
 
 function initGame(mode) {
-    getCtx();
+    getAudioCtx();
     document.getElementById('menu-screen').classList.add('hidden');
     arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
     score = 0; gameActive = true; dropCounter = 0; lastTime = performance.now();
@@ -300,7 +315,10 @@ function showQuiz(rows) {
                 rows.sort((a,b)=>a-b).forEach(y => { arena.splice(y, 1); arena.unshift(new Array(CONFIG.cols).fill(0)); });
                 for(let y=0; y<CONFIG.rows; y++) arena[y] = arena[y].map(v => v === -1 ? 0 : v);
                 score += rows.length * 100;
-            } else { SFX.error(); rows.forEach(y => arena[y] = arena[y].map(() => -1)); }
+            } else { 
+                SFX.fail(); 
+                rows.forEach(y => arena[y] = arena[y].map(() => -1)); 
+            }
             isPaused = false; screen.classList.add('hidden'); update();
         };
         optCont.appendChild(b);
