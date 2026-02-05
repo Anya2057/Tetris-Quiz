@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Tetris Quiz Ultra</title>
+    <title>Tetris Quiz Final Pro</title>
     <style>
         :root {
             --bg: #020617;
@@ -15,48 +15,54 @@
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; margin: 0; overflow: hidden;
         }
 
-        #bg-stars { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
+        /* Ключевое исправление: фон не мешает кликам */
+        #bg-stars { 
+            position: fixed; top: 0; left: 0; 
+            z-index: 0; 
+            pointer-events: none; 
+        }
 
         #game-wrapper {
-            display: flex; gap: 20px; padding: 20px;
-            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
-            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; gap: 20px; padding: 25px;
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px);
+            border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative; z-index: 10;
         }
 
-        canvas#tetris { background: #000; border-radius: 10px; border: 2px solid #334155; }
+        canvas#tetris { background: #000; border-radius: 12px; border: 3px solid #334155; }
 
-        .side-panel { width: 200px; display: flex; flex-direction: column; gap: 12px; }
+        .side-panel { width: 200px; display: flex; flex-direction: column; gap: 15px; }
 
         .stat-card {
-            background: #0f172a; padding: 10px; border-radius: 12px;
+            background: #0f172a; padding: 12px; border-radius: 16px;
             text-align: center; border: 1px solid #334155;
         }
 
-        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
-        .stat-value { font-size: 22px; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); }
 
         .btn {
-            border: none; padding: 12px; border-radius: 10px; font-weight: bold;
-            cursor: pointer; transition: 0.2s; z-index: 110; position: relative;
+            border: none; padding: 14px; border-radius: 14px; font-weight: bold;
+            cursor: pointer; transition: 0.2s; position: relative; z-index: 110;
         }
-        .btn-mode { background: var(--accent); color: #020617; width: 200px; margin-bottom: 10px; }
+        .btn-mode { background: var(--accent); color: #020617; width: 220px; margin-bottom: 12px; }
         .btn-restart { background: #475569; color: white; width: 100%; }
-        .btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
 
         .overlay { 
-            position: absolute; inset: 0; background: rgba(2, 6, 23, 0.9); 
-            z-index: 100; border-radius: 24px; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center;
+            position: absolute; inset: 0; background: rgba(2, 6, 23, 0.95); 
+            z-index: 100; border-radius: 28px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center;
         }
         .hidden { display: none !important; }
 
-        #q-options button { background: #334155; color: white; margin: 5px 0; width: 100%; }
+        #q-options button { background: #334155; color: white; margin: 6px 0; width: 100%; }
+        #q-options button:hover { background: var(--accent); color: #020617; }
     </style>
 </head>
 <body>
@@ -85,40 +91,38 @@
     </div>
 
     <div id="menu-screen" class="overlay">
-        <h1 style="color: var(--accent); margin-bottom: 30px;">TETRIS QUIZ</h1>
+        <h1 style="color: var(--accent); font-size: 32px; margin-bottom: 30px;">TETRIS QUIZ</h1>
         <button class="btn btn-mode" onclick="initGame('timer')">⏱️ СПРИНТ (5 МИН)</button>
         <button class="btn btn-mode" style="background:none; border: 1px solid #334155; color: white;" onclick="initGame('infinite')">♾️ БЕСКОНЕЧНО</button>
     </div>
 
     <div id="quiz-screen" class="overlay hidden">
-        <div style="padding: 20px; text-align: center; width: 80%;">
-            <h2 id="q-text" style="margin-bottom: 20px;">Вопрос</h2>
+        <div style="padding: 20px; width: 85%;">
+            <h2 id="q-text" style="margin-bottom: 25px;">Вопрос</h2>
             <div id="q-options" style="display: flex; flex-direction: column;"></div>
         </div>
     </div>
 
     <div id="result-screen" class="overlay hidden">
-        <h1 id="res-title">ФИНАЛ</h1>
-        <div id="res-stats" style="font-size: 24px; margin-bottom: 20px;"></div>
+        <h1 id="res-title">ФИНИШ</h1>
+        <div id="res-stats" style="font-size: 26px; margin: 20px 0;"></div>
         <button class="btn btn-mode" onclick="location.reload()">ИГРАТЬ СНОВА</button>
     </div>
 </div>
 
 <script>
-// --- КОНФИГУРАЦИЯ ---
 const CONFIG = { 
     cols: 10, rows: 20, size: 30, speed: 800,
     questions: [
-        { q: "Как правильно?", a: ["Language", "Langage"], c: 0 },
-        { q: "Столица Японии?", a: ["Осака", "Токио"], c: 1 },
-        { q: "2 + 2 * 2", a: ["8", "6"], c: 1 }
+        { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
+        { q: "Столица Франции?", a: ["Париж", "Лион", "Берлин"], c: 0 },
+        { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
     ]
 };
 
 const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 let audioCtx;
 
-// --- ЗВУКОВОЙ ДВИЖОК ---
 function playSFX(f, type, d, vol=0.1) {
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -138,36 +142,28 @@ const SFX = {
     fail: () => { playSFX(120, 'sawtooth', 0.8, 0.3); setTimeout(() => playSFX(80, 'sawtooth', 1.0, 0.3), 300); }
 };
 
-// --- ВИЗУАЛИЗАЦИЯ (ОБЪЕМНЫЕ БЛОКИ) ---
 const canvas = document.getElementById('tetris');
 const ctx = canvas.getContext('2d');
-const nctx = document.getElementById('next-piece-canvas').getContext('2d');
 const bg = document.getElementById('bg-stars');
 const bctx = bg.getContext('2d');
+const nctx = document.getElementById('next-piece-canvas').getContext('2d');
 
-let particles = [];
+let arena, score, gameActive = false, isPaused = false, timeLeft, timerInterval, dropCounter, lastTime, particles = [];
+
 function drawBlock(c, x, y, color, size) {
     const s = size - 2; const px = x * size + 1; const py = y * size + 1;
-    // Основной цвет
-    c.fillStyle = color;
-    c.fillRect(px, py, s, s);
-    // Грань сверху (светлая)
-    c.fillStyle = 'rgba(255,255,255,0.5)';
-    c.beginPath(); c.moveTo(px, py); c.lineTo(px+s, py); c.lineTo(px+s-4, py+4); c.lineTo(px+4, py+4); c.fill();
-    // Грань слева (светлая)
-    c.beginPath(); c.moveTo(px, py); c.lineTo(px+4, py+4); c.lineTo(px+4, py+s-4); c.lineTo(px, py+s); c.fill();
-    // Грань снизу (темная)
-    c.fillStyle = 'rgba(0,0,0,0.4)';
-    c.beginPath(); c.moveTo(px, py+s); c.lineTo(px+4, py+s-4); c.lineTo(px+s-4, py+s-4); c.lineTo(px+s, py+s); c.fill();
-    // Грань справа (темная)
-    c.beginPath(); c.moveTo(px+s, py); c.lineTo(px+s-4, py+4); c.lineTo(px+s-4, py+s-4); c.lineTo(px+s, py+s); c.fill();
+    c.fillStyle = color; c.fillRect(px, py, s, s);
+    c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.moveTo(px,py); c.lineTo(px+s,py); c.lineTo(px+s-4,py+4); c.lineTo(px+4,py+4); c.fill();
+    c.beginPath(); c.moveTo(px,py); c.lineTo(px+4,py+4); c.lineTo(px+4,py+s-4); c.lineTo(px,py+s); c.fill();
+    c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.moveTo(px,py+s); c.lineTo(px+4,py+s-4); c.lineTo(px+s-4,py+s-4); c.lineTo(px+s,py+s); c.fill();
+    c.beginPath(); c.moveTo(px+s,py); c.lineTo(px+s-4,py+4); c.lineTo(px+s-4,py+s-4); c.lineTo(px+s,py+s); c.fill();
 }
 
 function createFirework() {
     const x = Math.random() * bg.width, y = Math.random() * bg.height;
     const color = COLORS[Math.floor(Math.random() * 7) + 1];
     for (let i = 0; i < 30; i++) {
-        particles.push({ x, y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 1, color });
+        particles.push({ x, y, vx: (Math.random()-0.5)*18, vy: (Math.random()-0.5)*18, life: 1, color });
     }
 }
 
@@ -183,9 +179,20 @@ function anim() {
 }
 anim();
 
-// --- ЛОГИКА ТЕТРИСА ---
-let arena, score, gameActive = false, isPaused = false, timeLeft, timerInterval, dropCounter, lastTime;
 let player = { pos: {x: 0, y: 0}, matrix: null, next: null };
+
+function initGame(mode) {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.getElementById('menu-screen').classList.add('hidden');
+    arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
+    score = 0; gameActive = true; isPaused = false; dropCounter = 0; lastTime = performance.now();
+    timeLeft = mode === 'timer' ? 300 : 99999;
+    player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
+    playerReset(); updateUI();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => { if(!isPaused && gameActive && mode === 'timer') { timeLeft--; updateUI(); if(timeLeft <= 0) endGame(true); } }, 1000);
+    update();
+}
 
 function createPiece(t) {
     if (t === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
@@ -195,23 +202,6 @@ function createPiece(t) {
     if (t === 'J') return [[0,5,0],[0,5,0],[5,5,0]];
     if (t === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
     if (t === 'Z') return [[7,7,0],[0,7,7],[0,0,0]];
-}
-
-function initGame(mode) {
-    document.getElementById('menu-screen').classList.add('hidden');
-    arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
-    score = 0; gameActive = true; isPaused = false; dropCounter = 0; lastTime = performance.now();
-    timeLeft = mode === 'timer' ? 300 : 99999;
-    player.next = createPiece('ILJOTSZ'[Math.random()*7|0]);
-    playerReset();
-    updateUI();
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        if(!isPaused && gameActive && mode === 'timer') {
-            timeLeft--; updateUI(); if(timeLeft <= 0) endGame(true);
-        }
-    }, 1000);
-    update();
 }
 
 function playerReset() {
@@ -262,19 +252,16 @@ function endGame(win) {
     const title = document.getElementById('res-title');
     if(win) {
         title.innerText = "ПОБЕДА! 🎉"; title.style.color = "var(--accent)";
-        SFX.win(); let fw = setInterval(createFirework, 250); setTimeout(()=>clearInterval(fw), 4000);
-    } else {
-        title.innerText = "GAME OVER"; title.style.color = "var(--danger)";
-        SFX.fail();
-    }
+        SFX.win(); let fwCount = 0; 
+        let fw = setInterval(() => { createFirework(); fwCount++; if(fwCount > 20) clearInterval(fw); }, 200);
+    } else { title.innerText = "GAME OVER"; title.style.color = "var(--danger)"; SFX.fail(); }
     document.getElementById('res-stats').innerText = `Счёт: ${score}`;
 }
 
 function updateUI() {
     document.getElementById('score-val').innerText = score;
     const m = Math.floor(timeLeft/60), s = timeLeft%60;
-    if(timeLeft < 9999) document.getElementById('timer-val').innerText = `${m}:${s<10?'0':''}${s}`;
-    else document.getElementById('timer-val').innerText = "∞";
+    document.getElementById('timer-val').innerText = timeLeft > 90000 ? "∞" : `${m}:${s<10?'0':''}${s}`;
 }
 
 function update(time = 0) {
