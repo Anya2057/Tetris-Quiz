@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Tetris Quiz Pro - Tuned</title>
+    <title>Tetris Quiz Pro</title>
     <style>
         :root {
             --bg: #020617;
@@ -20,8 +20,12 @@
             min-height: 100vh; margin: 0; overflow: hidden;
         }
 
-        /* Гарантируем, что фон не кликабелен */
-        #bg-stars { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+        /* ИСПРАВЛЕНИЕ: Звезды строго сзади, клики проходят насквозь */
+        #bg-stars { 
+            position: fixed; top: 0; left: 0; 
+            z-index: -1; 
+            pointer-events: none; 
+        }
 
         #game-wrapper {
             display: flex; gap: 25px; padding: 25px;
@@ -31,6 +35,7 @@
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
+            z-index: 10;
         }
 
         canvas#tetris {
@@ -51,9 +56,10 @@
         .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
 
         .controller-map {
-            background: rgba(15, 23, 42, 0.5); padding: 15px;
-            border-radius: 18px; display: flex; flex-direction: column;
-            align-items: center; border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.5);
+            padding: 15px; border-radius: 18px;
+            display: flex; flex-direction: column; align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .d-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -70,6 +76,7 @@
             font-weight: bold; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             gap: 10px; transition: all 0.2s;
+            position: relative; z-index: 100;
         }
         .btn-restart { background: #475569; color: white; }
         .btn-finish { background: var(--danger); color: white; }
@@ -127,7 +134,7 @@
 
     <div id="menu-screen" class="overlay">
         <h1 style="font-size: 32px; color: var(--accent);">TETRIS QUIZ</h1>
-        <p style="opacity: 0.5; margin-bottom: 30px;">Объемные блоки и фейерверки!</p>
+        <p style="opacity: 0.5; margin-bottom: 30px;">Твоя любимая версия!</p>
         <button class="btn" style="width: 220px; background: var(--accent); color: #020623;" onclick="initGame('timer')">⏱️ СПРИНТ (5 МИН)</button>
         <button class="btn" style="width: 220px; background: transparent; color: white; border: 1px solid #334155; margin-top: 12px;" onclick="initGame('infinite')">♾️ БЕСКОНЕЧНО</button>
     </div>
@@ -151,7 +158,7 @@ const CONFIG = {
     cols: 10, rows: 20, size: 30, speed: 800, 
     questions: [
         { q: "Как правильно пишется?", a: ["Language", "Langage"], c: 0 },
-        { q: "Столица Франции?", a: ["Лион", "Париж", "Марсель"], c: 1 },
+        { q: "Столица Франции?", a: ["Париж", "Марсель"], c: 0 },
         { q: "2 + 2 * 2 = ?", a: ["8", "6"], c: 1 }
     ]
 };
@@ -159,19 +166,19 @@ const CONFIG = {
 const COLORS = [null, '#38bdf8', '#fbbf24', '#a855f7', '#10b981', '#f43f5e', '#fb7185', '#6366f1'];
 let audioCtx;
 
-function getAudioContext() {
+function getCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     return audioCtx;
 }
 
 function playSFX(f, type, d) {
-    const ctx = getAudioContext();
-    const o = ctx.createOscillator(); const g = ctx.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, ctx.currentTime);
-    g.gain.setValueAtTime(0.1, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + d);
-    o.connect(g); g.connect(ctx.destination);
-    o.start(); o.stop(ctx.currentTime + d);
+    const a = getCtx();
+    const o = a.createOscillator(); const g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, a.currentTime);
+    g.gain.setValueAtTime(0.1, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + d);
+    o.connect(g); g.connect(a.destination);
+    o.start(); o.stop(a.currentTime + d);
 }
 
 const SFX = {
@@ -180,7 +187,7 @@ const SFX = {
     clear: () => { playSFX(600, 'sine', 0.2); setTimeout(()=>playSFX(800, 'sine', 0.2), 100); },
     error: () => playSFX(100, 'sawtooth', 0.3),
     win: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playSFX(f, 'sine', 0.4), i * 150)); },
-    fail: () => { playSFX(120, 'sawtooth', 0.6); setTimeout(() => playSFX(80, 'sawtooth', 0.8), 250); }
+    fail: () => { playSFX(150, 'sawtooth', 0.6); setTimeout(() => playSFX(100, 'sawtooth', 0.6), 200); }
 };
 
 const canvas = document.getElementById('tetris');
@@ -193,22 +200,9 @@ let stars = [], particles = [];
 
 function drawBlock(c, x, y, color, size) {
     const s = size - 4; const px = x * size + 2; const py = y * size + 2;
-    
-    // Тело блока
-    c.fillStyle = color;
-    c.fillRect(px, py, s, s);
-
-    // Блик (верх и лево)
-    c.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    c.beginPath();
-    c.moveTo(px, py); c.lineTo(px+s, py); c.lineTo(px+s-4, py+4); c.lineTo(px+4, py+4); c.lineTo(px+4, py+s-4); c.lineTo(px, py+s);
-    c.fill();
-
-    // Тень (низ и право)
-    c.fillStyle = 'rgba(0, 0, 0, 0.25)';
-    c.beginPath();
-    c.moveTo(px+s, py); c.lineTo(px+s, py+s); c.lineTo(px, py+s); c.lineTo(px+4, py+s-4); c.lineTo(px+s-4, py+s-4); c.lineTo(px+s-4, py+4);
-    c.fill();
+    c.fillStyle = color; c.fillRect(px, py, s, s);
+    c.fillStyle = 'rgba(255, 255, 255, 0.4)'; c.fillRect(px, py, s, 4); c.fillRect(px, py, 4, s);
+    c.fillStyle = 'rgba(0, 0, 0, 0.3)'; c.fillRect(px, py + s - 4, s, 4); c.fillRect(px + s - 4, py, 4, s);
 }
 
 function initStars() {
@@ -219,15 +213,8 @@ function initStars() {
 function createFirework() {
     const x = Math.random() * bg.width, y = Math.random() * bg.height;
     const color = COLORS[Math.floor(Math.random() * 7) + 1];
-    for (let i = 0; i < 35; i++) {
-        particles.push({ 
-            x, y, 
-            vx: (Math.random()-0.5)*12, 
-            vy: (Math.random()-0.5)*12, 
-            gravity: 0.15,
-            life: 1, 
-            color 
-        });
+    for (let i = 0; i < 20; i++) {
+        particles.push({ x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 1, color });
     }
 }
 
@@ -235,14 +222,10 @@ function anim() {
     bctx.fillStyle = '#020617'; bctx.fillRect(0,0,bg.width,bg.height);
     bctx.fillStyle = '#fff';
     stars.forEach(s => { bctx.beginPath(); bctx.arc(s.x, s.y, s.s, 0, 7); bctx.fill(); s.y += s.v; if(s.y > bg.height) s.y = 0; });
-    
     particles.forEach((p, i) => {
         bctx.globalAlpha = p.life; bctx.fillStyle = p.color;
-        bctx.beginPath(); bctx.arc(p.x, p.y, 2.5, 0, 7); bctx.fill();
-        p.x += p.vx; p.y += p.vy;
-        p.vy += p.gravity; // Добавили гравитацию
-        p.life -= 0.015; 
-        if(p.life <= 0) particles.splice(i, 1);
+        bctx.beginPath(); bctx.arc(p.x, p.y, 2, 0, 7); bctx.fill();
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02; if(p.life <= 0) particles.splice(i, 1);
     });
     bctx.globalAlpha = 1; requestAnimationFrame(anim);
 }
@@ -269,7 +252,7 @@ function resetGame() {
 }
 
 function initGame(mode) {
-    getAudioContext(); // Активируем звук по клику
+    getCtx();
     document.getElementById('menu-screen').classList.add('hidden');
     arena = Array.from({length: CONFIG.rows}, () => Array(CONFIG.cols).fill(0));
     score = 0; gameActive = true; dropCounter = 0; lastTime = performance.now();
@@ -317,10 +300,7 @@ function showQuiz(rows) {
                 rows.sort((a,b)=>a-b).forEach(y => { arena.splice(y, 1); arena.unshift(new Array(CONFIG.cols).fill(0)); });
                 for(let y=0; y<CONFIG.rows; y++) arena[y] = arena[y].map(v => v === -1 ? 0 : v);
                 score += rows.length * 100;
-            } else { 
-                SFX.fail(); 
-                rows.forEach(y => arena[y] = arena[y].map(() => -1)); 
-            }
+            } else { SFX.error(); rows.forEach(y => arena[y] = arena[y].map(() => -1)); }
             isPaused = false; screen.classList.add('hidden'); update();
         };
         optCont.appendChild(b);
@@ -332,10 +312,7 @@ function endGame(win, manual=false) {
     document.getElementById('result-screen').classList.remove('hidden');
     const title = document.getElementById('res-title');
     if(manual) title.innerText = "ВЫХОД";
-    else if(win) { 
-        title.innerText = "ПОБЕДА! 🎉"; SFX.win(); 
-        let fw = setInterval(createFirework, 200); setTimeout(()=>clearInterval(fw), 3000); 
-    }
+    else if(win) { title.innerText = "ПОБЕДА! 🎉"; SFX.win(); let fw = setInterval(createFirework, 200); setTimeout(()=>clearInterval(fw), 3000); }
     else { title.innerText = "GAME OVER"; SFX.fail(); }
     document.getElementById('res-stats').innerText = `Счёт: ${score}`;
 }
