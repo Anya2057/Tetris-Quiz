@@ -1435,5 +1435,55 @@ canvas {
   height: 100% !important;
 }
 </style>
+    <script>
+    function autoResizeGame() {
+        // Мы ищем самый главный контейнер игры
+        // В твоем коде это обычно game-container или game-wrapper
+        const game = document.getElementById('game-wrapper') || document.getElementById('game-container') || document.body.firstElementChild;
+        
+        if (!game) return;
+
+        // Определяем доступное место в окне (iframe Genially)
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // Определяем реальный размер твоей игры
+        const gameWidth = game.offsetWidth + 40; // +40 на отступы
+        const gameHeight = game.offsetHeight + 40;
+
+        // Считаем коэффициент уменьшения
+        const scaleX = windowWidth / gameWidth;
+        const scaleY = windowHeight / gameHeight;
+        
+        // Выбираем наименьший, чтобы влезло всё
+        let scale = Math.min(scaleX, scaleY);
+        
+        // Если места много - не увеличиваем больше 1 (чтобы не размыло)
+        // Если места мало - уменьшаем
+        if (scale > 1) scale = 1;
+
+        // Применяем масштабирование
+        game.style.transform = `scale(${scale})`;
+        game.style.transformOrigin = 'top center';
+        
+        // Если игра уменьшилась, центрируем её по вертикали
+        if (scale < 1) {
+             // Вычисляем отступ, чтобы игра была по центру
+             const margin = (windowHeight - (gameHeight * scale)) / 2;
+             // Если отступ отрицательный (игра длинная), ставим 0
+             game.style.marginTop = `${Math.max(0, margin)}px`;
+        } else {
+             game.style.marginTop = '0px';
+             game.style.margin = 'auto';
+        }
+    }
+
+    // Запускаем подгонку при загрузке и при изменении размера окна
+    window.addEventListener('load', autoResizeGame);
+    window.addEventListener('resize', autoResizeGame);
+    
+    // На всякий случай запускаем несколько раз, пока игра грузится
+    setInterval(autoResizeGame, 1000);
+</script>
 </body>
 </html>
