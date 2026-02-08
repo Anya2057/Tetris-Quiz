@@ -12,40 +12,32 @@
             --bg-gradient-end: #1a1f3a;
             --panel-bg: rgba(15, 23, 42, 0.7);
             --panel-border: rgba(56, 189, 248, 0.2);
-            
             --neon-cyan: #00ffff;
             --neon-pink: #ff00ff;
             --neon-purple: #bf00ff;
             --neon-blue: #0080ff;
             --neon-green: #00ff88;
-            
             --accent-primary: #38bdf8;
             --accent-secondary: #818cf8;
             --accent-success: #22d3ee;
             --accent-danger: #f43f5e;
             --accent-warning: #fbbf24;
-            
             --text-bright: #ffffff;
             --text-main: #e2e8f0;
             --text-muted: #94a3b8;
             --text-dark: #475569;
-            
             --font-display: 'Orbitron', sans-serif;
             --font-body: 'Rajdhani', sans-serif;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             color: var(--text-main);
             font-family: var(--font-body);
             height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* Важно для Genially: убирает скролл */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -53,23 +45,10 @@
             position: relative;
         }
 
-        canvas#bg-stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 0;
-            opacity: 0.6;
-        }
+        canvas#bg-stars { position: fixed; top: 0; left: 0; z-index: 0; opacity: 0.6; pointer-events: none; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(10, 14, 39, 0.8) 100%); z-index: 1; pointer-events: none; }
 
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(10, 14, 39, 0.8) 100%);
-            z-index: 1;
-            pointer-events: none;
-        }
-
+        /* Контейнер игры */
         #game-wrapper {
             display: flex;
             gap: 24px;
@@ -77,515 +56,87 @@
             background: rgba(15, 23, 42, 0.4);
             border-radius: 32px;
             border: 2px solid var(--panel-border);
-            box-shadow: 
-                0 0 80px rgba(56, 189, 248, 0.15),
-                0 20px 60px rgba(0, 0, 0, 0.5),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 80px rgba(56, 189, 248, 0.15), 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             position: relative;
             z-index: 10;
-            animation: fadeIn 0.6s ease-out;
+            /* Это позволит нам масштабировать игру целиком */
+            transform-origin: center center;
+            transition: transform 0.3s ease; 
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(4px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-            40%, 60% { transform: translate3d(6px, 0, 0); }
-        }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
 
         canvas#tetris {
-            background: 
-                linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(10, 14, 39, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(10, 14, 39, 0.9) 100%);
             border-radius: 16px;
             border: 2px solid var(--panel-border);
-            box-shadow: 
-                inset 0 0 40px rgba(0, 0, 0, 0.6),
-                0 0 40px rgba(56, 189, 248, 0.2),
-                inset 0 2px 0 rgba(255, 255, 255, 0.03);
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.03);
             position: relative;
         }
 
-        .side-panel {
-            width: 240px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
+        .side-panel { width: 240px; display: flex; flex-direction: column; gap: 16px; }
         .panel-box {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
             border-radius: 20px;
             padding: 20px;
             text-align: center;
             border: 1px solid var(--panel-border);
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;
         }
-
-        .panel-box::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .panel-box:hover::before {
-            opacity: 1;
-        }
-
-        .label {
-            font-size: 12px;
-            font-weight: 700;
-            font-family: var(--font-display);
-            color: var(--text-muted);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            text-shadow: 0 0 10px rgba(148, 163, 184, 0.3);
-        }
-
-        .value {
-            font-size: 36px;
-            font-weight: 900;
-            font-family: var(--font-display);
-            color: var(--neon-cyan);
-            text-shadow: 
-                0 0 10px rgba(0, 255, 255, 0.8),
-                0 0 20px rgba(0, 255, 255, 0.6),
-                0 0 30px rgba(0, 255, 255, 0.4),
-                0 0 40px rgba(0, 255, 255, 0.2);
-            animation: neonPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes neonPulse {
-            0%, 100% { 
-                text-shadow: 
-                    0 0 10px rgba(0, 255, 255, 0.8),
-                    0 0 20px rgba(0, 255, 255, 0.6),
-                    0 0 30px rgba(0, 255, 255, 0.4);
-            }
-            50% { 
-                text-shadow: 
-                    0 0 15px rgba(0, 255, 255, 1),
-                    0 0 30px rgba(0, 255, 255, 0.8),
-                    0 0 45px rgba(0, 255, 255, 0.6),
-                    0 0 60px rgba(0, 255, 255, 0.4);
-            }
-        }
-
-        #next-container {
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        canvas#next {
-            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
-        }
-
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 8px;
-        }
-
+        .label { font-size: 12px; font-weight: 700; font-family: var(--font-display); color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; text-shadow: 0 0 10px rgba(148, 163, 184, 0.3); }
+        .value { font-size: 36px; font-weight: 900; font-family: var(--font-display); color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); animation: neonPulse 2s ease-in-out infinite; }
+        @keyframes neonPulse { 0%, 100% { text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); } 50% { text-shadow: 0 0 15px rgba(0, 255, 255, 1), 0 0 30px rgba(0, 255, 255, 0.8); } }
+        
+        #next-container { min-height: 100px; display: flex; align-items: center; justify-content: center; }
+        .controls-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
         .key-btn {
             background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-            border-radius: 12px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 3px solid #0f172a;
-            transition: all 0.15s ease;
-            position: relative;
-            overflow: hidden;
+            border-radius: 12px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 3px solid #0f172a; transition: all 0.15s ease;
         }
+        .key-btn:active { transform: translateY(1px); border-bottom-width: 1px; }
+        .key-btn span { font-size: 20px; color: var(--text-bright); font-weight: 700; }
 
-        .key-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .key-btn:hover::before {
-            opacity: 1;
-        }
-
-        .key-btn:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3);
-        }
-
-        .key-btn:active {
-            transform: translateY(1px);
-            border-bottom-width: 1px;
-        }
-
-        .key-btn span {
-            font-size: 20px;
-            color: var(--text-bright);
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .btn {
-            border: none;
-            padding: 14px 20px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 14px;
-            font-family: var(--font-display);
-            cursor: pointer;
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid transparent;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .btn:hover::before {
-            opacity: 1;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-menu {
-            background: linear-gradient(135deg, #475569 0%, #334155 100%);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-menu:hover {
-            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3);
-            border-color: var(--accent-primary);
-        }
-
-        .btn-exit {
-            background: linear-gradient(135deg, #f43f5e 0%, #dc2626 100%);
-            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
-        }
-
-        .btn-exit:hover {
-            box-shadow: 0 6px 25px rgba(244, 63, 94, 0.6);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
-            color: #0f172a;
-            box-shadow: 
-                0 4px 20px rgba(56, 189, 248, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            font-weight: 900;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 
-                0 6px 30px rgba(56, 189, 248, 0.7),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid var(--panel-border);
-            color: var(--text-main);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--accent-primary);
-            background: rgba(56, 189, 248, 0.1);
-        }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+        .btn { border: none; padding: 14px 20px; border-radius: 14px; font-weight: 700; font-size: 14px; font-family: var(--font-display); cursor: pointer; color: white; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-menu { background: linear-gradient(135deg, #475569 0%, #334155 100%); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-exit { background: linear-gradient(135deg, #f43f5e 0%, #dc2626 100%); }
+        .btn-primary { background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%); color: #0f172a; }
+        .btn-secondary { background: transparent; border: 2px solid var(--panel-border); color: var(--text-main); }
 
         .overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(2, 6, 23, 0.97);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+            position: absolute; inset: 0; background: rgba(2, 6, 23, 0.97); backdrop-filter: blur(10px);
+            border-radius: 32px; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
         }
+        .overlay.active { opacity: 1; pointer-events: all; }
 
-        .overlay.active {
-            opacity: 1;
-            pointer-events: all;
-            animation: overlaySlideIn 0.4s ease-out;
-        }
-
-        @keyframes overlaySlideIn {
-            from {
-                transform: scale(0.95);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-
-        h1 {
-            margin: 0 0 16px 0;
-            font-size: 48px;
-            font-family: var(--font-display);
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-purple) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
-            animation: titleGlow 3s ease-in-out infinite;
-            letter-spacing: 2px;
-        }
-
-        @keyframes titleGlow {
-            0%, 100% {
-                filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.6));
-            }
-            50% {
-                filter: drop-shadow(0 0 40px rgba(191, 0, 255, 0.8));
-            }
-        }
-
-        h2 {
-            color: var(--text-bright);
-            margin-bottom: 24px;
-            font-weight: 600;
-            font-size: 24px;
-            font-family: var(--font-body);
-        }
-
-        p {
-            color: var(--text-muted);
-            margin-bottom: 32px;
-            font-size: 16px;
-            font-weight: 300;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            margin-bottom: 32px;
-            font-weight: 300;
-        }
-
-        .quiz-container {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
+        h1 { font-size: 48px; font-family: var(--font-display); font-weight: 900; background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-purple) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 40px rgba(0, 255, 255, 0.5); letter-spacing: 2px; margin-bottom: 16px; }
+        h2 { color: var(--text-bright); margin-bottom: 24px; font-weight: 600; font-size: 24px; }
+        p, .subtitle { color: var(--text-muted); margin-bottom: 32px; font-size: 16px; }
+        
+        .quiz-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .quiz-opt {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            border: 2px solid rgba(56, 189, 248, 0.2);
-            padding: 20px 24px;
-            border-radius: 16px;
-            color: var(--text-main);
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 16px;
-            font-weight: 500;
-            position: relative;
-            overflow: hidden;
+            border: 2px solid rgba(56, 189, 248, 0.2); padding: 20px 24px; border-radius: 16px;
+            color: var(--text-main); text-align: left; cursor: pointer; transition: all 0.3s ease; font-size: 16px; font-weight: 500;
         }
+        .quiz-opt:hover { border-color: var(--accent-primary); transform: translateX(8px); background: rgba(56, 189, 248, 0.15); }
+        
+        .menu-buttons { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 300px; }
+        .result-stats { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 400px; margin: 24px 0; }
+        .stat-item { background: rgba(30, 41, 59, 0.6); border: 1px solid var(--panel-border); border-radius: 16px; padding: 20px; }
 
-        .quiz-opt::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .quiz-opt:hover {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(30, 41, 59, 0.9) 100%);
-            border-color: var(--accent-primary);
-            transform: translateX(8px);
-            box-shadow: 
-                0 8px 32px rgba(56, 189, 248, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        .quiz-opt:hover::before {
-            opacity: 1;
-        }
-
-        .quiz-opt:active {
-            transform: translateX(4px) scale(0.98);
-        }
-
-        /* Стили для Fill in Blank */
-        .quiz-input {
-            width: 100%;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 2px solid rgba(56, 189, 248, 0.3);
-            border-radius: 12px;
-            color: var(--text-main);
-            font-size: 16px;
-            font-family: var(--font-body);
-            margin-bottom: 15px;
-        }
-
-        .quiz-input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
-        }
-
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .menu-btn-large {
-            padding: 20px 32px;
-            font-size: 16px;
-            border-radius: 16px;
-        }
-
-        .result-stats {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-            width: 100%;
-            max-width: 400px;
-            margin: 24px 0;
-        }
-
-        .stat-item {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .text-success {
-            color: var(--accent-success);
-        }
-
-        .text-danger {
-            color: var(--accent-danger);
-        }
-
-        @media (max-width: 768px) {
-            #game-wrapper {
-                flex-direction: column;
-                padding: 20px;
-            }
-
-            .side-panel {
-                width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-
-            .panel-box {
-                flex: 1;
-                min-width: 120px;
-            }
-
-            h1 {
-                font-size: 32px;
-            }
-        }
-
-        /* Анимация комбо уведомления */
-        @keyframes comboPopup {
-            0% {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(0.5);
-            }
-            20% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1.2);
-            }
-            40% {
-                transform: translate(-50%, -50%) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(-50%, -70%) scale(1);
-            }
+        /* Поле ввода для типа "Write" (Добавлено для поддержки редактора) */
+        .q-input-field {
+            width: 100%; padding: 15px; background: rgba(0,0,0,0.5); 
+            border: 2px solid var(--accent-primary); color: #fff; 
+            border-radius: 10px; font-size: 1.5rem; text-align: center; 
+            margin-bottom: 20px; outline: none;
         }
     </style>
 </head>
@@ -595,606 +146,283 @@
 
 <div id="game-wrapper">
     <canvas id="tetris" width="360" height="600"></canvas>
-
     <div class="side-panel">
         <div class="panel-box">
             <div class="label">Следующая</div>
-            <div id="next-container">
-                <canvas id="next" width="120" height="80"></canvas>
-            </div>
+            <div id="next-container"><canvas id="next" width="120" height="80"></canvas></div>
         </div>
-
         <div class="panel-box">
             <div class="label">Время</div>
             <div id="time-val" class="value">05:00</div>
         </div>
-
         <div class="panel-box">
             <div class="label">Очки</div>
             <div id="score-val" class="value">0</div>
         </div>
-
         <div style="flex-grow: 1;"></div>
-
         <div class="panel-box" style="padding: 16px;">
             <div class="label" style="margin-bottom: 12px;">Управление</div>
             <div class="controls-grid">
-                <div></div>
-                <div class="key-btn" onclick="input(38)"><span>↻</span></div>
-                <div></div>
+                <div></div><div class="key-btn" onclick="input(38)"><span>↻</span></div><div></div>
                 <div class="key-btn" onclick="input(37)"><span>←</span></div>
                 <div class="key-btn" onclick="input(40)"><span>↓</span></div>
                 <div class="key-btn" onclick="input(39)"><span>→</span></div>
             </div>
-            <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
-                ПРОБЕЛ - быстрый сброс
-            </div>
+            <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">ПРОБЕЛ - быстрый сброс</div>
         </div>
-
         <div class="btn-group">
             <button class="btn btn-menu" onclick="resetToMenu()">Меню</button>
             <button class="btn btn-exit" onclick="endGame(false, true)">Выйти</button>
         </div>
     </div>
 
-    <!-- Меню -->
     <div id="menu-overlay" class="overlay active">
         <h1>NEON TETRIS</h1>
         <p class="subtitle">Образовательная головоломка</p>
         <div class="menu-buttons">
-            <button class="btn btn-primary menu-btn-large" onclick="startGame('timer')">
-                ⏱ Спринт (5 минут)
-            </button>
-            <button class="btn btn-secondary menu-btn-large" onclick="startGame('infinite')">
-                ♾ Бесконечный режим
-            </button>
+            <button class="btn btn-primary" onclick="startGame('timer')">⏱ Спринт (5 минут)</button>
+            <button class="btn btn-secondary" onclick="startGame('infinite')">♾ Бесконечный режим</button>
         </div>
     </div>
 
-    <!-- Квиз -->
     <div id="quiz-overlay" class="overlay">
-        <div style="width: 100%; max-width: 500px; text-align: left;">
-            <div class="label" style="margin-bottom: 12px; text-align: center;">Вопрос</div>
-            <h2 id="q-text" style="margin-top: 0; font-size: 22px; line-height: 1.5; text-align: center;">
-                Текст вопроса?
-            </h2>
+        <div id="quiz-content-area" style="width: 100%; max-width: 500px; text-align: center;">
+            <div class="label" style="margin-bottom: 12px;">Вопрос</div>
+            <h2 id="q-text">Текст вопроса?</h2>
+            <div id="q-options" class="quiz-container"></div>
         </div>
-        <div id="q-options" class="quiz-container"></div>
     </div>
 
-    <!-- Результат -->
     <div id="result-overlay" class="overlay">
         <h1 id="res-title">ПОБЕДА!</h1>
         <p id="res-desc">Отличный результат</p>
         <div class="result-stats">
-            <div class="stat-item">
-                <div class="label">Итоговый счёт</div>
-                <div id="res-score" class="value">0</div>
-            </div>
+            <div class="stat-item"><div class="label">Итоговый счёт</div><div id="res-score" class="value">0</div></div>
         </div>
-        <button class="btn btn-primary menu-btn-large" onclick="resetToMenu()">В меню</button>
+        <button class="btn btn-primary" onclick="resetToMenu()">В меню</button>
     </div>
 </div>
 
 <script>
-/* --- КОНФИГУРАЦИЯ (ЗАМЕНЯЕТСЯ РЕДАКТОРОМ) --- */
+// --- КОНФИГ (Эту часть заменит редактор) ---
 const CONFIG = {
-    mode: 'timer',
-    time: 300,
-    speed: 800,
-    maxMistakes: 5,
-    cols: 12,
-    rows: 20,
+    cols: 12, rows: 20,
     questions: [
-        { 
-            type: 'choice',
-            q: "Как переводится 'Red'?", 
-            a: ["Красный", "Синий", "Зелёный"], 
-            c: 0,
-            colorText: '#00d2ff',
-            colorBorder: '#00d2ff'
-        },
-        { 
-            type: 'choice',
-            q: "Столица Великобритании?", 
-            a: ["Лондон", "Париж", "Берлин"], 
-            c: 0,
-            colorText: '#00d2ff',
-            colorBorder: '#00d2ff'
-        },
-        { 
-            type: 'tf',
-            q: "Земля плоская?", 
-            a: ["True", "False"], 
-            c: 1,
-            colorText: '#00d2ff',
-            colorBorder: '#00d2ff'
-        },
-        { 
-            type: 'write',
-            q: "Столица Франции?", 
-            a: ["Париж"], 
-            c: 0,
-            colorText: '#00d2ff',
-            colorBorder: '#00d2ff'
-        }
+        {type: "choice", q: "Пример вопроса?", a: ["Да", "Нет"], c: 0}
     ]
 };
 
-/* --- ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ --- */
-let arena = [];
-let player = { pos: {x: 0, y: 0}, matrix: null, score: 0, mistakes: 0 };
-let nextPiece = null;
-let dropCounter = 0;
-let dropInterval = CONFIG.speed || 800;
-let lastTime = 0;
-let isPaused = false;
-let gameActive = false;
-let timerVal = CONFIG.time || 300;
-let timerRef = null;
-let particles = [];
-let stars = [];
-let currentQuestion = null;
+// --- ПЕРЕМЕННЫЕ ---
+let arena = [], player = { pos: {x: 0, y: 0}, matrix: null, score: 0 }, nextPiece = null;
+let dropCounter = 0, dropInterval = 800, lastTime = 0;
+let isPaused = false, gameActive = false, timerVal = 300, timerRef = null;
+let particles = [], stars = [];
 
-/* --- АУДИО --- */
+// --- АУДИО ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
 function playTone(freq, type, dur, vol=0.1) {
     if(audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
     gain.gain.setValueAtTime(vol, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
 }
-
 const SFX = {
     move: () => playTone(300, 'sine', 0.05, 0.05),
     rotate: () => playTone(400, 'triangle', 0.1, 0.05),
     drop: () => playTone(150, 'sawtooth', 0.1, 0.1),
-    clear: () => { 
-        playTone(600, 'sine', 0.1, 0.2); 
-        setTimeout(() => playTone(800, 'sine', 0.2, 0.2), 100); 
-    },
-    error: () => { 
-        playTone(150, 'sawtooth', 0.3, 0.3); 
-        setTimeout(() => playTone(100, 'sawtooth', 0.3, 0.3), 150); 
-    },
-    win: () => { 
-        [523, 659, 783, 1046].forEach((f, i) => 
-            setTimeout(() => playTone(f, 'square', 0.3, 0.1), i * 120)
-        ); 
-    }
+    clear: () => { playTone(600, 'sine', 0.1, 0.2); setTimeout(() => playTone(800, 'sine', 0.2, 0.2), 100); },
+    error: () => { playTone(150, 'sawtooth', 0.3, 0.3); setTimeout(() => playTone(100, 'sawtooth', 0.3, 0.3), 150); },
+    win: () => { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.3, 0.1), i * 120)); }
 };
 
-/* --- ГРАФИКА --- */
-const cvs = document.getElementById('tetris');
-const ctx = cvs.getContext('2d');
-const nextCvs = document.getElementById('next');
-const nextCtx = nextCvs.getContext('2d');
-function resizeCanvas() {
-  const baseWidth = 480;
-  const baseHeight = 800;
-
-  const scale = Math.min(
-    window.innerWidth / baseWidth,
-    window.innerHeight / baseHeight
-  );
-
-  canvas.width = baseWidth;
-  canvas.height = baseHeight;
-
-  canvas.style.width = `${baseWidth * scale}px`;
-  canvas.style.height = `${baseHeight * scale}px`;
-}
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-const COLORS = [
-    null,
-    '#ff0066', // Z
-    '#00ff88', // S
-    '#bf00ff', // T
-    '#ffdd00', // O
-    '#00ddff', // I
-    '#ff6600', // L
-    '#0066ff'  // J
-];
-
-const bgCvs = document.getElementById('bg-stars');
-const bgCtx = bgCvs.getContext('2d');
+// --- ГРАФИКА ---
+const cvs = document.getElementById('tetris'), ctx = cvs.getContext('2d');
+const nextCvs = document.getElementById('next'), nextCtx = nextCvs.getContext('2d');
+const bgCvs = document.getElementById('bg-stars'), bgCtx = bgCvs.getContext('2d');
+const COLORS = [null, '#ff0066', '#00ff88', '#bf00ff', '#ffdd00', '#00ddff', '#ff6600', '#0066ff'];
 
 function initStars() {
-    bgCvs.width = window.innerWidth;
-    bgCvs.height = window.innerHeight;
-    stars = [];
-    for(let i = 0; i < 200; i++) {
-        stars.push({
-            x: Math.random() * bgCvs.width,
-            y: Math.random() * bgCvs.height,
-            size: Math.random() * 2 + 0.5,
-            speed: Math.random() * 0.5 + 0.1,
-            alpha: Math.random() * 0.5 + 0.5,
-            twinkleSpeed: Math.random() * 0.02 + 0.01,
-            twinklePhase: Math.random() * Math.PI * 2
-        });
-    }
+    bgCvs.width = window.innerWidth; bgCvs.height = window.innerHeight; stars = [];
+    for(let i=0; i<200; i++) stars.push({x:Math.random()*bgCvs.width, y:Math.random()*bgCvs.height, size:Math.random()*2+0.5, speed:Math.random()*0.5+0.1, alpha:Math.random()*0.5+0.5, twinkleSpeed:Math.random()*0.02+0.01, twinklePhase:Math.random()*Math.PI*2});
 }
-
-window.onresize = initStars;
-initStars();
+window.onresize = initStars; initStars();
 
 function drawBackground() {
     bgCtx.clearRect(0, 0, bgCvs.width, bgCvs.height);
-    
     stars.forEach(s => {
         s.twinklePhase += s.twinkleSpeed;
-        const twinkle = Math.sin(s.twinklePhase) * 0.3 + 0.7;
-        
-        bgCtx.globalAlpha = s.alpha * twinkle;
-        bgCtx.fillStyle = '#ffffff';
-        bgCtx.beginPath();
-        bgCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        bgCtx.fill();
-        
-        if(s.size > 1.5) {
-            bgCtx.globalAlpha = s.alpha * twinkle * 0.3;
-            bgCtx.beginPath();
-            bgCtx.arc(s.x, s.y, s.size * 2, 0, Math.PI * 2);
-            bgCtx.fill();
-        }
-        
-        s.y += s.speed;
-        if(s.y > bgCvs.height) {
-            s.y = 0;
-            s.x = Math.random() * bgCvs.width;
-        }
+        bgCtx.globalAlpha = s.alpha * (Math.sin(s.twinklePhase)*0.3+0.7);
+        bgCtx.fillStyle = '#fff'; bgCtx.beginPath(); bgCtx.arc(s.x, s.y, s.size, 0, Math.PI*2); bgCtx.fill();
+        s.y += s.speed; if(s.y > bgCvs.height) { s.y = 0; s.x = Math.random()*bgCvs.width; }
     });
-    
-    bgCtx.globalAlpha = 1;
-    updateFireworks();
-    requestAnimationFrame(drawBackground);
+    bgCtx.globalAlpha = 1; updateFireworks(); requestAnimationFrame(drawBackground);
 }
-
 drawBackground();
 
 function createFirework(x, y, color) {
-    for(let i = 0; i < 30; i++) {
-        const angle = (Math.PI * 2 * i) / 30;
-        const speed = Math.random() * 6 + 2;
-        particles.push({
-            x, y, color,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            life: 1.0,
-            size: Math.random() * 3 + 1
-        });
+    for(let i=0; i<30; i++) {
+        const angle = (Math.PI*2*i)/30, speed = Math.random()*6+2;
+        particles.push({x, y, color, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed, life:1.0, size:Math.random()*3+1});
     }
 }
-
 function updateFireworks() {
-    for(let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        
-        bgCtx.globalAlpha = p.life;
-        bgCtx.shadowBlur = 15;
-        bgCtx.shadowColor = p.color;
-        bgCtx.fillStyle = p.color;
-        bgCtx.beginPath();
-        bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        bgCtx.fill();
-        
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.1;
-        p.life -= 0.015;
-        
+    for(let i=particles.length-1; i>=0; i--) {
+        let p = particles[i];
+        bgCtx.globalAlpha = p.life; bgCtx.shadowBlur = 15; bgCtx.shadowColor = p.color; bgCtx.fillStyle = p.color;
+        bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); bgCtx.fill();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= 0.015;
         if(p.life <= 0) particles.splice(i, 1);
     }
-    
-    bgCtx.globalAlpha = 1;
-    bgCtx.shadowBlur = 0;
+    bgCtx.globalAlpha = 1; bgCtx.shadowBlur = 0;
 }
 
 function drawBlock(targetCtx, x, y, colorId, size = 30) {
     if(!colorId) return;
-    
     const color = colorId === -1 ? '#475569' : COLORS[colorId];
-    const px = x * size;
-    const py = y * size;
-
-    targetCtx.shadowBlur = 25;
-    targetCtx.shadowColor = color;
-    
-    const gradient = targetCtx.createLinearGradient(px, py, px + size, py + size);
-    gradient.addColorStop(0, color);
-    gradient.addColorStop(1, shadeColor(color, -30));
-    
-    targetCtx.fillStyle = gradient;
-    targetCtx.fillRect(px + 2, py + 2, size - 4, size - 4);
-
+    const px = x*size, py = y*size;
+    targetCtx.shadowBlur = 25; targetCtx.shadowColor = color;
+    const grad = targetCtx.createLinearGradient(px, py, px+size, py+size);
+    grad.addColorStop(0, color); grad.addColorStop(1, '#000');
+    targetCtx.fillStyle = grad; targetCtx.fillRect(px+2, py+2, size-4, size-4);
     targetCtx.shadowBlur = 0;
-    
-    const highlightGradient = targetCtx.createLinearGradient(px, py, px, py + size / 2);
-    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    targetCtx.fillStyle = highlightGradient;
-    targetCtx.fillRect(px + 2, py + 2, size - 4, size / 2 - 2);
-    
-    targetCtx.strokeStyle = shadeColor(color, 40);
-    targetCtx.lineWidth = 1;
-    targetCtx.strokeRect(px + 3, py + 3, size - 6, size - 6);
+    targetCtx.strokeStyle = color; targetCtx.lineWidth = 1; targetCtx.strokeRect(px+3, py+3, size-6, size-6);
 }
 
-function shadeColor(color, percent) {
-    const num = parseInt(color.replace("#", ""), 16);
-    const amt = Math.round(2.55 * percent);
-    const R = (num >> 16) + amt;
-    const G = (num >> 8 & 0x00FF) + amt;
-    const B = (num & 0x0000FF) + amt;
-    return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-        (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-        (B < 255 ? B < 1 ? 0 : B : 255))
-        .toString(16).slice(1);
-}
-
-/* --- ИГРОВАЯ ЛОГИКА --- */
-function createMatrix(w, h) {
-    const matrix = [];
-    while(h--) matrix.push(new Array(w).fill(0));
-    return matrix;
-}
-
+// --- ИГРОВАЯ ЛОГИКА ---
+function createMatrix(w, h) { const m=[]; while(h--) m.push(new Array(w).fill(0)); return m; }
 function createPiece(type) {
-    if(type === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
-    if(type === 'L') return [[0, 6, 0], [0, 6, 0], [0, 6, 6]];
-    if(type === 'J') return [[0, 7, 0], [0, 7, 0], [7, 7, 0]];
-    if(type === 'O') return [[4, 4], [4, 4]];
-    if(type === 'Z') return [[1, 1, 0], [0, 1, 1], [0, 0, 0]];
-    if(type === 'S') return [[0, 2, 2], [2, 2, 0], [0, 0, 0]];
-    if(type === 'T') return [[0, 3, 0], [3, 3, 3], [0, 0, 0]];
+    if(type==='I') return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]]; if(type==='L') return [[0,6,0],[0,6,0],[0,6,6]];
+    if(type==='J') return [[0,7,0],[0,7,0],[7,7,0]]; if(type==='O') return [[4,4],[4,4]];
+    if(type==='Z') return [[1,1,0],[0,1,1],[0,0,0]]; if(type==='S') return [[0,2,2],[2,2,0],[0,0,0]];
+    if(type==='T') return [[0,3,0],[3,3,3],[0,0,0]];
 }
 
 function startGame(mode) {
     document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
     document.getElementById('game-wrapper').classList.remove('shake');
-    
-    arena = createMatrix(CONFIG.cols, CONFIG.rows);
-    player.score = 0;
-    player.mistakes = 0;
-    timerVal = mode === 'timer' ? CONFIG.time : -1;
-    
-    updateScore();
-    nextPiece = createPiece('ILJOTSZ'[Math.random() * 7 | 0]);
-    playerReset();
-    
-    isPaused = false;
-    gameActive = true;
-    lastTime = 0;
-    dropCounter = 0;
-    
+    arena = createMatrix(12, 20); player.score = 0; timerVal = mode==='timer'?300:-1;
+    updateScore(); nextPiece = createPiece('ILJOTSZ'[Math.random()*7|0]); playerReset();
+    isPaused = false; gameActive = true; lastTime = 0; dropCounter = 0;
     if(timerRef) clearInterval(timerRef);
-    
-    if(mode === 'timer') {
-        updateTimer();
-        timerRef = setInterval(() => {
-            if(!isPaused && gameActive) {
-                timerVal--;
-                updateTimer();
-                if(timerVal <= 0) endGame(true);
-            }
-        }, 1000);
-    } else {
-        document.getElementById('time-val').innerText = "∞";
-    }
-    
+    if(mode==='timer') {
+        updateTimer(); timerRef = setInterval(() => { if(!isPaused && gameActive) { timerVal--; updateTimer(); if(timerVal<=0) endGame(true); } }, 1000);
+    } else document.getElementById('time-val').innerText = "∞";
     update();
 }
 
 function playerReset() {
-    player.matrix = nextPiece;
-    nextPiece = createPiece('ILJOTSZ'[Math.random() * 7 | 0]);
-    player.pos.y = 0;
-    player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-    
-    drawNext();
-    
-    if(collide(arena, player)) {
-        endGame(false);
-    }
+    player.matrix = nextPiece; nextPiece = createPiece('ILJOTSZ'[Math.random()*7|0]);
+    player.pos.y = 0; player.pos.x = (arena[0].length/2|0) - (player.matrix[0].length/2|0);
+    drawNext(); if(collide(arena, player)) endGame(false);
 }
 
 function drawNext() {
-    nextCtx.clearRect(0, 0, nextCvs.width, nextCvs.height);
-    
-    const offsetX = (nextCvs.width / 20 - nextPiece[0].length) / 2;
-    const offsetY = (nextCvs.height / 20 - nextPiece.length) / 2;
-    
-    nextPiece.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if(value !== 0) drawBlock(nextCtx, x + offsetX, y + offsetY, value, 20);
-        });
-    });
+    nextCtx.clearRect(0,0,nextCvs.width,nextCvs.height);
+    const offX = (nextCvs.width/20 - nextPiece[0].length)/2, offY = (nextCvs.height/20 - nextPiece.length)/2;
+    nextPiece.forEach((r,y) => r.forEach((v,x) => { if(v) drawBlock(nextCtx, x+offX, y+offY, v, 20); }));
 }
 
 function collide(arena, player) {
     const [m, o] = [player.matrix, player.pos];
-    for(let y = 0; y < m.length; ++y) {
-        for(let x = 0; x < m[y].length; ++x) {
-            if(m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
-                return true;
-            }
-        }
-    }
+    for(let y=0; y<m.length; ++y) for(let x=0; x<m[y].length; ++x)
+        if(m[y][x] && (arena[y+o.y] && arena[y+o.y][x+o.x]) !== 0) return true;
     return false;
 }
 
 function merge(arena, player) {
-    player.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if(value !== 0) {
-                arena[y + player.pos.y][x + player.pos.x] = value;
-            }
-        });
-    });
+    player.matrix.forEach((r,y) => r.forEach((v,x) => { if(v) arena[y+player.pos.y][x+player.pos.x] = v; }));
 }
 
 function arenaSweep() {
-    let rowsToClear = [];
-    outer: for(let y = arena.length - 1; y > 0; --y) {
-        for(let x = 0; x < arena[y].length; ++x) {
-            if(arena[y][x] === 0) continue outer;
-        }
-        rowsToClear.push(y);
+    let rows = [];
+    outer: for(let y=arena.length-1; y>0; --y) {
+        for(let x=0; x<arena[y].length; ++x) if(arena[y][x]===0) continue outer;
+        rows.push(y);
     }
-    
-    if(rowsToClear.length > 0) {
-        isPaused = true;
-        showQuiz(rowsToClear);
-    }
+    if(rows.length) { isPaused = true; showQuiz(rows); }
 }
 
 function update(time = 0) {
     if(!gameActive) return;
-    
     if(!isPaused) {
-        const deltaTime = time - lastTime;
+        if((time - lastTime) > (dropCounter += (time - lastTime), dropInterval)) playerDrop();
         lastTime = time;
-        dropCounter += deltaTime;
-        if(dropCounter > dropInterval) {
-            playerDrop();
-        }
     }
-
-    draw();
-    requestAnimationFrame(update);
+    draw(); requestAnimationFrame(update);
 }
 
 function draw() {
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
-    
-    arena.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if(value !== 0) drawBlock(ctx, x, y, value);
-        });
-    });
-    
-    if(player.matrix) {
-        player.matrix.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if(value !== 0) drawBlock(ctx, x + player.pos.x, y + player.pos.y, value);
-            });
-        });
-    }
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    arena.forEach((r,y) => r.forEach((v,x) => v && drawBlock(ctx, x, y, v)));
+    if(player.matrix) player.matrix.forEach((r,y) => r.forEach((v,x) => v && drawBlock(ctx, x+player.pos.x, y+player.pos.y, v)));
 }
 
 function playerDrop() {
     player.pos.y++;
-    if(collide(arena, player)) {
-        player.pos.y--;
-        merge(arena, player);
-        SFX.drop();
-        playerReset();
-        arenaSweep();
-        dropCounter = 0;
-    } else {
-        dropCounter = 0;
-    }
+    if(collide(arena, player)) { player.pos.y--; merge(arena, player); SFX.drop(); playerReset(); arenaSweep(); dropCounter = 0; }
+    else dropCounter = 0;
 }
-
-function playerMove(dir) {
-    player.pos.x += dir;
-    if(collide(arena, player)) {
-        player.pos.x -= dir;
-    } else {
-        SFX.move();
-    }
-}
-
+function playerMove(dir) { player.pos.x += dir; if(collide(arena, player)) player.pos.x -= dir; else SFX.move(); }
 function playerRotate() {
-    const pos = player.pos.x;
-    let offset = 1;
+    const pos = player.pos.x; let offset = 1;
     const matrix = player.matrix;
-    
-    player.matrix = matrix[0].map((val, index) => 
-        matrix.map(row => row[index]).reverse()
-    );
-    
+    player.matrix = matrix[0].map((_, i) => matrix.map(row => row[i]).reverse());
     while(collide(arena, player)) {
-        player.pos.x += offset;
-        offset = -(offset + (offset > 0 ? 1 : -1));
-        if(offset > player.matrix[0].length) {
-            player.matrix = matrix;
-            player.pos.x = pos;
-            return;
-        }
+        player.pos.x += offset; offset = -(offset + (offset>0?1:-1));
+        if(offset > player.matrix[0].length) { player.matrix = matrix; player.pos.x = pos; return; }
     }
-    
     SFX.rotate();
 }
 
-/* --- КВИЗ --- */
+// --- UI И КВИЗ ---
 function showQuiz(rows) {
-    currentQuestion = CONFIG.questions[Math.floor(Math.random() * CONFIG.questions.length)];
+    const q = CONFIG.questions[Math.floor(Math.random() * CONFIG.questions.length)];
     const overlay = document.getElementById('quiz-overlay');
+    const qText = document.getElementById('q-text');
     const container = document.getElementById('q-options');
-    const questionText = document.getElementById('q-text');
-    
-    // Применяем кастомные цвета
-    questionText.innerText = currentQuestion.q;
-    questionText.style.color = currentQuestion.colorText || '#00d2ff';
+    const contentArea = document.getElementById('quiz-content-area');
+
+    // Поддержка цветов из редактора
+    qText.innerText = q.q;
+    if(q.colorText) qText.style.color = q.colorText;
+    if(q.colorBorder) contentArea.style.border = `4px solid ${q.colorBorder}`;
     
     container.innerHTML = '';
     
-    // Разные типы вопросов
-    if(currentQuestion.type === 'choice' || currentQuestion.type === 'tf') {
-        // Multiple Choice или True/False
-        currentQuestion.a.forEach((ans, idx) => {
+    // Поддержка типа Write (ввод текста)
+    if (q.type === 'write') {
+        const input = document.createElement('input');
+        input.className = 'q-input-field';
+        input.placeholder = 'Введите ответ...';
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-primary'; 
+        btn.style.width = "100%";
+        btn.innerText = 'ПРОВЕРИТЬ';
+        btn.onclick = () => handleAnswer(input.value.trim().toLowerCase() === q.a[0].toLowerCase(), rows);
+        container.append(input, btn);
+        setTimeout(() => input.focus(), 100);
+    } 
+    // Поддержка Small Talk
+    else if (q.type === 'smalltalk') {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-primary';
+        btn.style.width = "100%";
+        btn.innerText = 'ГОТОВО';
+        btn.onclick = () => handleAnswer(true, rows);
+        container.append(btn);
+    }
+    // Стандартный выбор
+    else {
+        q.a.forEach((ans, idx) => {
             const div = document.createElement('div');
             div.className = 'quiz-opt';
             div.innerText = ans;
-            div.style.borderColor = currentQuestion.colorBorder || '#00d2ff';
-            div.onclick = () => handleAnswer(idx === currentQuestion.c, rows);
+            div.onclick = () => handleAnswer(idx === q.c, rows);
             container.appendChild(div);
         });
-    } else if(currentQuestion.type === 'write') {
-        // Fill in the Blank
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'quiz-input';
-        input.placeholder = 'Введите ответ...';
-        input.style.borderColor = currentQuestion.colorBorder || '#00d2ff';
-        container.appendChild(input);
-        
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-primary';
-        btn.innerText = 'Проверить';
-        btn.style.width = '100%';
-        btn.onclick = () => {
-            const userAnswer = input.value.trim().toLowerCase();
-            const correctAnswer = currentQuestion.a[0].toLowerCase();
-            handleAnswer(userAnswer === correctAnswer, rows);
-        };
-        container.appendChild(btn);
-    } else if(currentQuestion.type === 'smalltalk') {
-        // Small Talk - любой ответ правильный
-        const p = document.createElement('p');
-        p.style.textAlign = 'center';
-        p.style.color = currentQuestion.colorText || '#00d2ff';
-        p.innerText = 'Нажмите продолжить';
-        container.appendChild(p);
-        
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-primary';
-        btn.innerText = 'Продолжить';
-        btn.style.width = '100%';
-        btn.onclick = () => handleAnswer(true, rows);
-        container.appendChild(btn);
     }
     
     overlay.classList.add('active');
@@ -1202,199 +430,36 @@ function showQuiz(rows) {
 
 function handleAnswer(isCorrect, rows) {
     document.getElementById('quiz-overlay').classList.remove('active');
-    
     if(isCorrect) {
         SFX.clear();
-        
-        rows.sort((a, b) => a - b).forEach(y => {
-            arena.splice(y, 1);
-            arena.unshift(new Array(CONFIG.cols).fill(0));
-            
-            for(let i = 0; i < 3; i++) {
-                setTimeout(() => {
-                    createFirework(
-                        window.innerWidth / 2 + (Math.random() - 0.5) * 400,
-                        window.innerHeight / 2 + (Math.random() - 0.5) * 200,
-                        COLORS[Math.floor(Math.random() * 7) + 1]
-                    );
-                }, i * 100);
-            }
+        rows.forEach(y => { arena.splice(y, 1); arena.unshift(new Array(12).fill(0)); 
+            for(let i=0; i<3; i++) setTimeout(() => createFirework(window.innerWidth/2+(Math.random()-0.5)*400, window.innerHeight/2+(Math.random()-0.5)*200, COLORS[Math.floor(Math.random()*7)+1]), i*100);
         });
-        
-        // Лечение серых блоков
-        for(let y = 0; y < CONFIG.rows; y++) {
-            for(let x = 0; x < CONFIG.cols; x++) {
-                if(arena[y][x] === -1) arena[y][x] = 0;
-            }
-        }
-        
-        // СИСТЕМА КОМБО: больше линий = больше очков
-        let basePoints = 100;
-        let comboMultiplier = 1;
-        let comboText = '';
-        
-        if(rows.length === 1) {
-            comboMultiplier = 1;
-            comboText = '';
-        } else if(rows.length === 2) {
-            comboMultiplier = 2;
-            comboText = 'COMBO x2! 🔥';
-        } else if(rows.length === 3) {
-            comboMultiplier = 3;
-            comboText = 'COMBO x3! 🔥🔥';
-        } else if(rows.length >= 4) {
-            comboMultiplier = 4;
-            comboText = 'TETRIS! 🔥🔥🔥';
-        }
-        
-        const earnedPoints = basePoints * rows.length * comboMultiplier;
-        player.score += earnedPoints;
-        updateScore();
-        
-        // Показываем комбо уведомление
-        if(comboText) {
-            showComboNotification(comboText, earnedPoints);
-        }
-        
+        player.score += rows.length * 100; updateScore();
     } else {
         SFX.error();
-        player.mistakes++;
-        
         const wrapper = document.getElementById('game-wrapper');
-        wrapper.classList.remove('shake');
-        void wrapper.offsetWidth;
-        wrapper.classList.add('shake');
-        
-        // ВАЖНО: Находим ВСЕ полные линии на поле и блокируем их
-        let allFullLines = [];
-        for(let y = 0; y < arena.length; y++) {
-            let isFull = true;
-            for(let x = 0; x < arena[y].length; x++) {
-                if(arena[y][x] === 0) {
-                    isFull = false;
-                    break;
-                }
-            }
-            if(isFull) {
-                allFullLines.push(y);
-            }
-        }
-        
-        // Превращаем ВСЕ полные линии в камень
-        allFullLines.forEach(y => {
-            for(let x = 0; x < CONFIG.cols; x++) {
-                arena[y][x] = -1;
-            }
-        });
-        
-        // Проверка лимита ошибок
-        if(CONFIG.maxMistakes && player.mistakes >= CONFIG.maxMistakes) {
-            endGame(false);
-            return;
-        }
+        wrapper.classList.remove('shake'); void wrapper.offsetWidth; wrapper.classList.add('shake');
+        rows.forEach(y => { for(let x=0; x<12; x++) arena[y][x] = -1; });
     }
-    
     isPaused = false;
 }
 
-// Функция показа комбо уведомления
-function showComboNotification(text, points) {
-    // Создаем элемент уведомления
-    const notification = document.createElement('div');
-    notification.style.position = 'fixed';
-    notification.style.top = '50%';
-    notification.style.left = '50%';
-    notification.style.transform = 'translate(-50%, -50%)';
-    notification.style.zIndex = '200';
-    notification.style.fontSize = '48px';
-    notification.style.fontWeight = '900';
-    notification.style.fontFamily = 'Orbitron, sans-serif';
-    notification.style.color = '#00ffff';
-    notification.style.textShadow = '0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff';
-    notification.style.textAlign = 'center';
-    notification.style.pointerEvents = 'none';
-    notification.style.animation = 'comboPopup 1.5s ease-out forwards';
-    
-    notification.innerHTML = `
-        <div style="margin-bottom: 10px;">${text}</div>
-        <div style="font-size: 32px; color: #fbbf24;">+${points} pts</div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Удаляем через 1.5 секунды
-    setTimeout(() => {
-        notification.remove();
-    }, 1500);
-}
+function updateScore() { document.getElementById('score-val').innerText = player.score; }
+function updateTimer() { if(timerVal<0)return; const m=Math.floor(timerVal/60), s=timerVal%60; document.getElementById('time-val').innerText = `${m}:${s<10?'0':''}${s}`; }
 
-function updateScore() {
-    document.getElementById('score-val').innerText = player.score;
-}
-
-function updateTimer() {
-    if(timerVal < 0) return;
-    const m = Math.floor(timerVal / 60);
-    const s = timerVal % 60;
-    document.getElementById('time-val').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-}
-
-function endGame(win, manual = false) {
-    gameActive = false;
-    clearInterval(timerRef);
-    
-    if(manual) {
-        resetToMenu();
-        return;
-    }
-    
+function endGame(win, manual=false) {
+    gameActive = false; clearInterval(timerRef);
+    if(manual) { resetToMenu(); return; }
     const overlay = document.getElementById('result-overlay');
-    const title = document.getElementById('res-title');
-    const desc = document.getElementById('res-desc');
-    
     document.getElementById('res-score').innerText = player.score;
+    if(win) { document.getElementById('res-title').innerText = "ПОБЕДА!"; SFX.win(); }
+    else { document.getElementById('res-title').innerText = "GAME OVER"; SFX.error(); }
     overlay.classList.add('active');
-    
-    if(win) {
-        title.innerText = "ПОБЕДА! 🎉";
-        title.style.background = "linear-gradient(135deg, #22d3ee 0%, #10b981 100%)";
-        title.style.webkitBackgroundClip = "text";
-        title.style.webkitTextFillColor = "transparent";
-        desc.innerText = "Вы справились с заданием!";
-        SFX.win();
-        
-        let fwCount = 0;
-        const fw = setInterval(() => {
-            if(!overlay.classList.contains('active') || fwCount > 20) {
-                clearInterval(fw);
-                return;
-            }
-            createFirework(
-                Math.random() * window.innerWidth,
-                Math.random() * window.innerHeight,
-                COLORS[Math.floor(Math.random() * 7) + 1]
-            );
-            fwCount++;
-        }, 200);
-        
-    } else {
-        title.innerText = "GAME OVER";
-        title.style.background = "linear-gradient(135deg, #f43f5e 0%, #dc2626 100%)";
-        title.style.webkitBackgroundClip = "text";
-        title.style.webkitTextFillColor = "transparent";
-        desc.innerText = "Поле переполнилось";
-        SFX.error();
-    }
 }
+function resetToMenu() { gameActive = false; isPaused = true; clearInterval(timerRef); document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active')); document.getElementById('menu-overlay').classList.add('active'); }
 
-function resetToMenu() {
-    gameActive = false;
-    isPaused = true;
-    clearInterval(timerRef);
-    document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
-    document.getElementById('menu-overlay').classList.add('active');
-}
-
+// Управление
 function input(key) {
     if(!gameActive || isPaused) return;
     if(key === 37) playerMove(-1);
@@ -1403,87 +468,26 @@ function input(key) {
     else if(key === 38) playerRotate();
     else if(key === 32) hardDrop();
 }
+function hardDrop() { while(!collide(arena, player)) player.pos.y++; player.pos.y--; merge(arena, player); SFX.drop(); playerReset(); arenaSweep(); dropCounter = 0; }
+document.addEventListener('keydown', event => input(event.keyCode));
 
-function hardDrop() {
-    while(!collide(arena, player)) {
-        player.pos.y++;
-    }
-    player.pos.y--;
-    merge(arena, player);
-    SFX.drop();
-    playerReset();
-    arenaSweep();
-    dropCounter = 0;
+// --- АВТО-МАСШТАБИРОВАНИЕ (ДЛЯ GENIALLY) ---
+function autoResize() {
+    const game = document.getElementById('game-wrapper');
+    if(!game) return;
+    const winW = window.innerWidth, winH = window.innerHeight;
+    const gameW = game.offsetWidth, gameH = game.offsetHeight;
+    let scale = Math.min(winW / (gameW+20), winH / (gameH+20));
+    if(scale > 1) scale = 1; // Не увеличиваем больше оригинала
+    game.style.transform = `scale(${scale})`;
+    // Центрирование
+    const mt = (winH - gameH*scale)/2;
+    game.style.marginTop = mt > 0 ? `${mt}px` : '0';
 }
+window.addEventListener('load', autoResize);
+window.addEventListener('resize', autoResize);
+setInterval(autoResize, 1000);
 
-document.addEventListener('keydown', event => {
-    input(event.keyCode);
-});
-</script>
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-</style>
-    <script>
-    function autoResizeGame() {
-        // Мы ищем самый главный контейнер игры
-        // В твоем коде это обычно game-container или game-wrapper
-        const game = document.getElementById('game-wrapper') || document.getElementById('game-container') || document.body.firstElementChild;
-        
-        if (!game) return;
-
-        // Определяем доступное место в окне (iframe Genially)
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-
-        // Определяем реальный размер твоей игры
-        const gameWidth = game.offsetWidth + 40; // +40 на отступы
-        const gameHeight = game.offsetHeight + 40;
-
-        // Считаем коэффициент уменьшения
-        const scaleX = windowWidth / gameWidth;
-        const scaleY = windowHeight / gameHeight;
-        
-        // Выбираем наименьший, чтобы влезло всё
-        let scale = Math.min(scaleX, scaleY);
-        
-        // Если места много - не увеличиваем больше 1 (чтобы не размыло)
-        // Если места мало - уменьшаем
-        if (scale > 1) scale = 1;
-
-        // Применяем масштабирование
-        game.style.transform = `scale(${scale})`;
-        game.style.transformOrigin = 'top center';
-        
-        // Если игра уменьшилась, центрируем её по вертикали
-        if (scale < 1) {
-             // Вычисляем отступ, чтобы игра была по центру
-             const margin = (windowHeight - (gameHeight * scale)) / 2;
-             // Если отступ отрицательный (игра длинная), ставим 0
-             game.style.marginTop = `${Math.max(0, margin)}px`;
-        } else {
-             game.style.marginTop = '0px';
-             game.style.margin = 'auto';
-        }
-    }
-
-    // Запускаем подгонку при загрузке и при изменении размера окна
-    window.addEventListener('load', autoResizeGame);
-    window.addEventListener('resize', autoResizeGame);
-    
-    // На всякий случай запускаем несколько раз, пока игра грузится
-    setInterval(autoResizeGame, 1000);
 </script>
 </body>
 </html>
