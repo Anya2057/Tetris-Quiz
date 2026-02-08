@@ -777,7 +777,24 @@ const cvs = document.getElementById('tetris');
 const ctx = cvs.getContext('2d');
 const nextCvs = document.getElementById('next');
 const nextCtx = nextCvs.getContext('2d');
+function resizeCanvas() {
+  const baseWidth = 480;
+  const baseHeight = 800;
 
+  const scale = Math.min(
+    window.innerWidth / baseWidth,
+    window.innerHeight / baseHeight
+  );
+
+  canvas.width = baseWidth;
+  canvas.height = baseHeight;
+
+  canvas.style.width = `${baseWidth * scale}px`;
+  canvas.style.height = `${baseHeight * scale}px`;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 const COLORS = [
     null,
     '#ff0066', // Z
