@@ -323,10 +323,10 @@
         }
         
         @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(4px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-            40%, 60% { transform: translate3d(6px, 0, 0); }
+            10%, 90% { transform: translate(-50%, -50%) translate3d(-2px, 0, 0) scale(var(--genially-scale, 1)); }
+            20%, 80% { transform: translate(-50%, -50%) translate3d(4px, 0, 0) scale(var(--genially-scale, 1)); }
+            30%, 50%, 70% { transform: translate(-50%, -50%) translate3d(-6px, 0, 0) scale(var(--genially-scale, 1)); }
+            40%, 60% { transform: translate(-50%, -50%) translate3d(6px, 0, 0) scale(var(--genially-scale, 1)); }
         }
 
         canvas#tetris {
@@ -1327,7 +1327,10 @@ function showQuiz(rows) {
         // РАНДОМИЗИРУЕМ порядок ответов
         const shuffledAnswers = answersWithIndices.sort(() => Math.random() - 0.5);
         
-        // Цвета для вариантов (неоновая палитра)
+        // Проверяем, задан ли пользовательский цвет
+        const useCustomColor = currentQuestion.colorBorder && currentQuestion.colorBorder !== '#00d2ff';
+        
+        // Цвета для вариантов (неоновая палитра) - используются только если НЕ задан пользовательский
         const answerColors = [
             '#00ffff', // cyan
             '#ff00ff', // magenta
@@ -1340,8 +1343,11 @@ function showQuiz(rows) {
             div.className = 'quiz-opt';
             div.innerText = ansObj.text;
             
-            // Используем цвет из палитры (циклически)
-            const answerColor = answerColors[idx % answerColors.length];
+            // Выбираем цвет: либо пользовательский для всех, либо из палитры
+            const answerColor = useCustomColor 
+                ? currentQuestion.colorBorder 
+                : answerColors[idx % answerColors.length];
+            
             div.style.borderColor = answerColor;
             div.style.color = answerColor;
             
